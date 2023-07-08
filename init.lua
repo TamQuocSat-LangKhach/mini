@@ -267,7 +267,7 @@ local mini_tongxin = fk.CreateActiveSkill{
         target:drawCards(1, self.name)
       end
     else
-      room:obtainCard(target.id, effect.cards, false, fk.ReasonGive)
+      room:obtainCard(target.id, effect.cards[1], false, fk.ReasonGive)
       if not target.dead and target:getHandcardNum() >= player:getHandcardNum() then
         room:damage{
           from = player,
