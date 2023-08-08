@@ -491,4 +491,99 @@ Fk:loadTranslationTable{
   ["@guojia_moulve"] = "谋略值",
 }
 
+--应n神要求把喵藏在这里
+local nya__caiwenji = General(extension, "nya__caiwenji", "qun", 3, 3, General.Female)
+nya__caiwenji.total_hidden = true
+nya__caiwenji:addSkill("ol_ex__beige")
+nya__caiwenji:addSkill("duanchang")
+nya__caiwenji:addSkill("chenqing")
+nya__caiwenji:addSkill("mozhi")
+nya__caiwenji:addSkill("shuangjia")
+nya__caiwenji:addSkill("beifen")
+
+local nya__diaochan = General(extension, "nya__diaochan", "qun", 3, 3, General.Female)
+nya__diaochan.total_hidden = true
+nya__diaochan:addSkill("lijian")
+nya__diaochan:addSkill("ex__biyue")
+nya__diaochan:addSkill("lihun")
+nya__diaochan:addSkill("huoxin")
+nya__diaochan:addSkill("meihun")
+
+local nya__caifuren = General(extension, "nya__caifuren", "qun", 3, 3, General.Female)
+nya__caifuren.total_hidden = true
+nya__caifuren:addSkill("m_ex__qieting")
+nya__caifuren:addSkill("xianzhou")
+
+local nya__xingcai = General(extension, "nya__xingcai", "shu", 3, 3, General.Female)
+nya__xingcai.total_hidden = true
+nya__xingcai:addSkill("shenxian")
+nya__xingcai:addSkill("qiangwu")
+
+local nya__zhurong = General(extension, "nya__zhurong", "shu", 4, 4, General.Female)
+nya__zhurong.total_hidden = true
+nya__zhurong:addSkill("juxiang")
+nya__zhurong:addSkill("lieren")
+nya__zhurong:addSkill("ol_ex__changbiao")
+
+local nya__huangyueying = General(extension, "nya__huangyueying", "shu", 3, 3, General.Female)
+nya__huangyueying.total_hidden = true
+nya__huangyueying:addSkill("ex__jizhi")
+nya__huangyueying:addSkill("ex__qicai")
+nya__huangyueying:addSkill("ty__jiqiao")
+nya__huangyueying:addSkill("ty__linglong")
+
+local nya__daqiao = General(extension, "nya__daqiao", "wu", 3, 3, General.Female)
+nya__daqiao.total_hidden = true
+nya__daqiao:addSkill("ex__guose")
+nya__daqiao:addSkill("liuli")
+nya__daqiao:addSkill("yanxiao")
+nya__daqiao:addSkill("anxian")
+nya__daqiao:addSkill("mini_xiangzhi")
+nya__daqiao:addSkill("mini_jielie")
+
+local nya__xiaoqiao = General(extension, "nya__xiaoqiao", "wu", 3, 3, General.Female)
+nya__xiaoqiao.total_hidden = true
+nya__xiaoqiao:addSkill("ol_ex__tianxiang")
+nya__xiaoqiao:addSkill("ol_ex__hongyan")
+nya__xiaoqiao:addSkill("ol_ex__piaoling")
+nya__xiaoqiao:addSkill("mini_tongxin")
+nya__xiaoqiao:addSkill("mini_shaoyan")
+
+local nya__sunshangxiang = General(extension, "nya__sunshangxiang", "wu", 3, 3, General.Female)
+nya__sunshangxiang.total_hidden = true
+nya__sunshangxiang:addSkill("ex__jieyin")
+nya__sunshangxiang:addSkill("xiaoji")
+nya__sunshangxiang:addSkill("liangzhu")
+nya__sunshangxiang:addSkill("fanxiang")
+
+local nya__zhenji = General(extension, "nya__zhenji", "wei", 3, 3, General.Female)
+nya__zhenji.total_hidden = true
+nya__zhenji:addSkill("ex__luoshen")
+nya__zhenji:addSkill("qingguo")
+
+local nya__zhangchunhua = General(extension, "nya__zhangchunhua", "wei", 3, 3, General.Female)
+nya__zhangchunhua.total_hidden = true
+nya__zhangchunhua:addSkill("ty_ex__jueqing")
+nya__zhangchunhua:addSkill("ty_ex__shangshi")
+
+local nya__wangyi = General(extension, "nya__wangyi", "wei", 4, 4, General.Female)
+nya__wangyi.total_hidden = true
+nya__wangyi:addSkill("zhenlie")
+nya__wangyi:addSkill("miji")
+
+Fk:loadTranslationTable{
+  ["nya"] = "喵",
+  ["nya__caiwenji"] = "文姬喵",
+  ["nya__diaochan"] = "貂蝉喵",
+  ["nya__caifuren"] = "蔡夫人喵",
+  ["nya__xingcai"] = "星彩喵",
+  ["nya__zhurong"] = "祝融喵",
+  ["nya__huangyueying"] = "月英喵",
+  ["nya__daqiao"] = "大乔喵",
+  ["nya__xiaoqiao"] = "小乔喵",
+  ["nya__sunshangxiang"] = "香香喵",
+  ["nya__zhenji"] = "甄姬喵",
+  ["nya__zhangchunhua"] = "春华喵",
+  ["nya__wangyi"] = "王异喵",
+}
 return extension
