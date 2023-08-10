@@ -586,4 +586,270 @@ Fk:loadTranslationTable{
   ["nya_zhangchunhua"] = "春华喵",
   ["nya_wangyi"] = "王异喵",
 }
+
+Fk:loadTranslationTable{
+  ["miniex__guojia"] = "郭嘉",
+  ["mini_suanlve"] = "算略",
+  [":mini_suanlve"] = "游戏开始时，你获得3点谋略值。准备阶段，若谋略值大于你的手牌数，你摸一张牌。"..
+  "每个回合结束时，若你本回合使用或打出过的牌数不小于体力值，你获得等同于体力值的谋略值。",
+  ["mini_dingce"] = "定策",
+  [":mini_dingce"] = "每回合限一次，你可以消耗X+1点谋略值（X为你本轮发动此技能的次数），将一张牌当你本回合使用的上一张基本牌或普通锦囊牌使用。",
+  ["mini_miaoji"] = "妙计",
+  [":mini_miaoji"] = "每回合限一次，你可以消耗1~3点谋略值，视为使用对应的牌：1.【过河拆桥】；2.【无懈可击】；3.【无中生有】。",
+  ["@guojia_moulve"] = "谋略值",
+}
+
+local caocao = General(extension, "mini__caocao", "wei", 4)
+
+local mini__jianxiong = fk.CreateTriggerSkill{
+  name = "mini__jianxiong",
+  events = {fk.Damage},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target == player and data.card and player.phase ~= Player.NotActive and 
+    not table.contains(type(player:getMark("@$mini__jianxiong-turn")) == "table" and player:getMark("@$mini__jianxiong-turn") or {}, data.card.trueName) and 
+    table.every(data.card:isVirtual() and data.card.subcards or {data.card.id}, function(id) return player.room:getCardArea(id) == Card.Processing end) and not player.dead
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:broadcastSkillInvoke("guixin")
+    local record = type(player:getMark("@$mini__jianxiong-turn")) == "table" and player:getMark("@$mini__jianxiong-turn") or {}
+    table.insert(record, data.card.trueName)
+    room:setPlayerMark(player, "@$mini__jianxiong-turn", record)
+    room:obtainCard(player, data.card, true, fk.ReasonJustMove)
+  end
+}
+
+caocao:addSkill(mini__jianxiong)
+caocao:addSkill("hujia")
+
+Fk:loadTranslationTable{
+  ["mini__caocao"] = "曹操",
+  ["mini__jianxiong"] = "奸雄",
+  [":mini__jianxiong"] = "当你于你的回合内使用牌造成伤害后，你可以获得造成伤害的牌（每回合每牌名的牌限一次）。",
+
+  ["@$mini__jianxiong-turn"] = "奸雄",
+}
+
+local weiyan = General(extension, "mini__weiyan", "shu", 4)
+local mini__kuanggu = fk.CreateTriggerSkill{
+  name = "mini__kuanggu",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.Damage},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target == player and (data.extra_data or {}).kuanggucheak
+  end,
+  on_trigger = function(self, event, target, player, data)
+    for i = 1, data.damage do
+      if not player:hasSkill(self.name) then break end
+      self:doCost(event, target, player, data)
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if player:isWounded() then
+      player.room:recover({
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
+    if not player.dead then
+      player:drawCards(1, self.name)
+    end
+  end,
+
+  refresh_events = {fk.BeforeHpChanged},
+  can_refresh = function(self, event, target, player, data)
+    if data.damageEvent and player == data.damageEvent.from and player:distanceTo(target) < 2 then
+      return true
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    data.damageEvent.extra_data = data.damageEvent.extra_data or {}
+    data.damageEvent.extra_data.kuanggucheak = true
+  end,
+}
+
+weiyan:addSkill(mini__kuanggu)
+
+Fk:loadTranslationTable{
+  ["mini__weiyan"] = "魏延",
+  ["mini__kuanggu"] = "狂骨",
+  [":mini__kuanggu"] = "锁定技，当你对小于2以内的一名角色造成1点伤害后，你回复1点体力并摸一张牌。",
+
+  ["$mini__kuanggu1"] = "沙场驰骋，但求一败！",
+  ["$mini__kuanggu2"] = "我自横扫天下，蔑视群雄又如何？",
+  ["~mini__weiyan"] = "怨气，终难平……",
+}
+
+local menghuo = General(extension, "mini__menghuo", "shu", 4)
+local mini__huoshou = fk.CreateTriggerSkill{
+  name = "mini__huoshou",
+  mute = true,
+  events = {fk.PreCardEffect, fk.DamageInflicted},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self.name) and data.card and data.card.trueName == "savage_assault" then
+      if event == fk.PreCardEffect then
+        return data.to == player.id
+      else
+        return target ~= player
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.PreCardEffect then
+      return true
+    else
+      local card = player.room:askForDiscard(player, 1, 1, true, self.name, true, nil, "#mini__huoshou-ask::" .. target.id, true)
+      if #card > 0 then
+        self.cost_data = card
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if event == fk.PreCardEffect then
+      return true
+    else
+      local room = player.room
+      room:doIndicate(player.id, {target.id})
+      room:throwCard(self.cost_data, self.name, player, player)
+      data.damage = data.damage + 1
+    end
+  end,
+}
+
+local mini__zaiqi = fk.CreateTriggerSkill{
+  name = "mini__zaiqi",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Draw and player:usedSkillTimes(self.name, Player.HistoryGame) < 7
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local cids = room:getNCards(player:usedSkillTimes(self.name, Player.HistoryGame) + 1)
+    room:moveCards{
+      ids = cids,
+      toArea = Card.Processing,
+      moveReason = fk.ReasonJustMove,
+      skillName = self.name,
+    }
+    room:delay(2000)
+    local cards, choices = {}, {}
+    for _, id in ipairs(cids) do
+      local card = Fk:getCardById(id)
+      local cardType = card:getColorString()
+      if cards[cardType] == nil then
+        table.insert(choices, cardType)
+      end
+      cards[cardType] = cards[cardType] or {}
+      table.insert(cards[cardType], id)
+    end
+    local choice = room:askForChoice(player, choices, self.name, "#mini__zaiqi-ask", false)
+    local dummy = Fk:cloneCard("dilu")
+    dummy:addSubcards(cards[choice])
+    room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
+    room:addPlayerMark(player, "@mini__zaiqi")
+    return true
+  end,
+}
+
+menghuo:addSkill(mini__huoshou)
+menghuo:addSkill(mini__zaiqi)
+
+Fk:loadTranslationTable{
+  ["mini__menghuo"] = "孟获",
+  ["mini__huoshou"] = "祸首",
+  [":mini__huoshou"] = "【南蛮入侵】对你无效。其他角色受到【南蛮入侵】的伤害时，你可以弃置一张手牌，令此伤害+1。",
+  ["mini__zaiqi"] = "再起",
+  [":mini__zaiqi"] = "每局限七次，摸牌阶段，你可以改为亮出牌堆顶的X+1张牌，然后获得其中一种颜色的所有牌（X为本技能已发动的次数）。",
+
+  ["#mini__huoshou-ask"] = "祸首：是否弃置一张牌，令 %dest 受到的伤害+1",
+  ["@mini__zaiqi"] = "再起",
+  ["#mini__zaiqi-ask"] = "再起：选择一种颜色，获得该颜色的所有牌",
+}
+
+local zhangxingcai = General(extension, "mini__zhangxingcai", "shu", 3, 3, General.Female)
+local mini__shenxian = fk.CreateTriggerSkill{
+  name = "mini__shenxian",
+  anim_type = "drawcard",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then return false end
+    for _, move in ipairs(data) do
+      local from = move.from and player.room:getPlayerById(move.from) or nil
+      if from and move.moveReason == fk.ReasonDiscard then
+        for _, info in ipairs(move.moveInfo) do
+          if Fk:getCardById(info.cardId).type == Card.TypeBasic then
+            return true
+          end
+        end
+      end
+    end
+  end,
+  on_trigger = function(self, event, target, player, data)
+    local targets = {}
+    for _, move in ipairs(data) do
+      local from = move.from and player.room:getPlayerById(move.from) or nil
+      if from and move.moveReason == fk.ReasonDiscard then
+        for _, info in ipairs(move.moveInfo) do
+          if Fk:getCardById(info.cardId).type == Card.TypeBasic then
+            table.insertIfNeed(targets, from.id)
+          end
+        end
+      end
+    end
+    for i = 1, #targets do
+      if not player:hasSkill(self.name) then break end
+      self:doCost(event, nil, player, data)
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:broadcastSkillInvoke("shenxian")
+    player:drawCards(1, self.name)
+  end,
+}
+
+local mini__qiangwu = fk.CreateActiveSkill{
+  name = "mini__qiangwu",
+  anim_type = "offensive",
+  card_num = 1,
+  target_num = 0,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:throwCard(effect.cards, self.name, player, player)
+    room:setPlayerMark(player, "@mini__qiangwu-turn", Fk:getCardById(effect.cards[1]).number)
+  end,
+}
+local mini__qiangwu_buff = fk.CreateTargetModSkill{
+  name = "#mini__qiangwu_buff",
+  residue_func = function(self, player, skill, scope, card)
+    return (player:getMark("@mini__qiangwu-turn") ~= 0 and skill.trueName == "slash_skill" and card.number > player:getMark("@mini__qiangwu-turn") and scope == Player.HistoryPhase) and 998 or 0
+  end,
+  distance_limit_func = function(self, player, skill, card)
+    return (player:getMark("@mini__qiangwu-turn") ~= 0 and skill.trueName == "slash_skill" and card.number > player:getMark("@mini__qiangwu-turn")) and 998 or 0
+  end,
+}
+mini__qiangwu:addRelatedSkill(mini__qiangwu_buff)
+
+zhangxingcai:addSkill(mini__shenxian)
+zhangxingcai:addSkill(mini__qiangwu)
+
+Fk:loadTranslationTable{
+  ["mini__zhangxingcai"] = "张星彩",
+  ["mini__shenxian"] = "甚贤",
+  [":mini__shenxian"] = "当有角色因弃置而失去基本牌后，你可以摸一张牌。",
+  ["mini__qiangwu"] = "枪舞",
+  [":mini__qiangwu"] = "出牌阶段限一次，你可以弃置一张手牌，然后本回合你使用点数大于弃置牌的【杀】不计入次数且无距离限制。",
+
+  ["@mini__qiangwu-turn"] = "枪舞",
+}
 return extension
