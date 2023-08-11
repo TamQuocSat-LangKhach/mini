@@ -766,7 +766,7 @@ Fk:loadTranslationTable{
   ["mini__zaiqi"] = "再起",
   [":mini__zaiqi"] = "每局限七次，摸牌阶段，你可以改为亮出牌堆顶的X+1张牌，然后获得其中一种颜色的所有牌（X为本技能已发动的次数）。",
 
-  ["#mini__huoshou-ask"] = "祸首：是否弃置一张牌，令 %dest 受到的伤害+1",
+  ["#mini__huoshou-ask"] = "祸首：你可以弃置一张牌，令 %dest 受到的伤害+1",
   ["@mini__zaiqi"] = "再起",
   ["#mini__zaiqi-ask"] = "再起：选择一种颜色，获得该颜色的所有牌",
 }
@@ -851,5 +851,242 @@ Fk:loadTranslationTable{
   [":mini__qiangwu"] = "出牌阶段限一次，你可以弃置一张手牌，然后本回合你使用点数大于弃置牌的【杀】不计入次数且无距离限制。",
 
   ["@mini__qiangwu-turn"] = "枪舞",
+}
+
+local caochong = General(extension, "mini__caochong", "wei", 3)
+
+local mini__renxin = fk.CreateTriggerSkill{
+  name = "mini__renxin",
+  anim_type = "support",
+  events = {fk.DamageInflicted},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target.hp <= data.damage and target ~= player and not player:isNude() and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local card = player.room:askForDiscard(player, 1, 1, true, self.name, true, nil, "#mini__renxin-ask::" .. target.id, true)
+    if #card > 0 then
+      self.cost_data = card
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {target.id})
+    room:broadcastSkillInvoke("renxin")
+    room:throwCard(self.cost_data, self.name, player, player)
+    if not player.dead then
+      room:damage{
+        from = data.from,
+        to = player,
+        damage = data.damage,
+        damageType = data.type,
+        skillName = self.name,
+        card = data.card,
+      }
+    end
+    return true
+  end,
+}
+
+caochong:addSkill("chengxiang")
+caochong:addSkill(mini__renxin)
+
+Fk:loadTranslationTable{
+  ["mini__caochong"] = "曹冲",
+  ["mini__renxin"] = "仁心",
+  [":mini__renxin"] = "每轮限一次，当其他角色受到不小于其体力值的伤害时，你可以弃置一张牌将此伤害转移给你。",
+
+  ["#mini__renxin-ask"] = "仁心：你可以弃置一张牌，将 %dest 受到的伤害转移给你",
+}
+
+local lvmeng = General(extension, "mini__lvmeng", "wu", 4)
+
+local mini__keji = fk.CreateTriggerSkill{
+  name = "mini__keji",
+  anim_type = "drawcard",
+  events = {fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.card.type == Card.TypeBasic and player.phase == Player.Play
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+    player.room:addPlayerMark(player, MarkEnum.AddMaxCardsInTurn, 1)
+  end,
+}
+
+lvmeng:addSkill(mini__keji)
+
+Fk:loadTranslationTable{
+  ["mini__lvmeng"] = "吕蒙",
+  ["mini__keji"] = "克己",
+  [":mini__keji"] = "当你使用一张基本牌时，若此时为你的出牌阶段，你摸一张牌，本回合的手牌上限+1。",
+}
+
+local jiaxu = General(extension, "mini__jiaxu", "qun", 3)
+local mini__wansha = fk.CreateTriggerSkill{
+  name = "mini__wansha",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Play and table.find(player.room.alive_players, function(p) return p.hp > 1 end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.map(table.filter(room.alive_players, function(p) return p.hp > 1 end), Util.IdMapper)
+    if #targets == 0 then return false end
+    local target = room:askForChoosePlayers(player, targets, 1, 1, "#mini__wansha-ask", self.name, false)
+    self.cost_data = target[1]
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:broadcastSkillInvoke("wansha")
+    local target = room:getPlayerById(self.cost_data)
+    room:setPlayerMark(player, "@mini__wansha-phase", target.general)
+    room:setPlayerMark(player, "_mini__wansha-phase", target.id)
+    room:loseHp(target, 1, self.name)
+  end,
+
+  refresh_events = {fk.EnterDying},
+  can_refresh = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and player.phase ~= Player.NotActive
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:notifySkillInvoked(player, self.name)
+    player.room:broadcastSkillInvoke("wansha")
+  end,
+}
+local mini__wansha_prohibit = fk.CreateProhibitSkill{
+  name = "#mini__wansha_prohibit",
+  prohibit_use = function(self, player, card)
+    if card.name == "peach" and not player.dying then
+      local invoke, ret
+      for _, p in ipairs(Fk:currentRoom().alive_players) do
+        if p.phase ~= Player.NotActive and p:hasSkill(mini__wansha.name) then
+          invoke = true
+        end
+        if p.dying then
+          ret = true
+        end
+      end
+      return invoke and ret
+    end
+  end,
+}
+local mini__wansha_recover = fk.CreateTriggerSkill{
+  name = "#mini__wansha_recover",
+  events = {fk.EventPhaseEnd},
+  frequency = Skill.Compulsory,
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return player == target and target:getMark("_mini__wansha-phase") ~= 0 and not player.room:getPlayerById(player:getMark("_mini__wansha-phase")).dead
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local target = room:getPlayerById(player:getMark("_mini__wansha-phase"))
+    if not target.dead then
+      room:recover({
+        who = target,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
+  end,
+}
+mini__wansha:addRelatedSkill(mini__wansha_prohibit)
+mini__wansha:addRelatedSkill(mini__wansha_recover)
+
+local mini__luanwu = fk.CreateActiveSkill{
+  name = "mini__luanwu",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 0,
+  frequency = Skill.Limited,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  card_filter = function() return false end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:broadcastSkillInvoke("luanwu")
+    local cids = room:getCardsFromPileByRule("slash")
+    if #cids > 0 then
+      room:obtainCard(player, cids[1], false, fk.ReasonPrey)
+    end
+    local targets = room:getAlivePlayers()
+    room:doIndicate(player.id, table.map(targets, function (p) return p.id end))
+    for _, target in ipairs(targets) do
+      local other_players = room:getOtherPlayers(target)
+      local luanwu_targets = table.map(table.filter(other_players, function(p2)
+        return table.every(other_players, function(p1)
+          return target:distanceTo(p1) >= target:distanceTo(p2)
+        end) and p2 ~= player
+      end), function (p)
+        return p.id
+      end)
+      local use = room:askForUseCard(target, "slash", "slash", "#mini__luanwu-use", true, {exclusive_targets = luanwu_targets})
+      if use then
+        room:useCard(use)
+      else
+        room:loseHp(target, 1, self.name)
+      end
+    end
+  end,
+}
+
+jiaxu:addSkill(mini__wansha)
+jiaxu:addSkill(mini__luanwu)
+jiaxu:addSkill("weimu")
+
+Fk:loadTranslationTable{
+  ["mini__jiaxu"] = "贾诩",
+  ["mini__wansha"] = "完杀",
+  [":mini__wansha"] = "锁定技，你的回合内，若有角色处于濒死状态，不处于濒死状态的其他角色，不能使用【桃】。出牌阶段开始时，你令一名体力值大于1的角色失去1点体力，出牌阶段结束时，其回复1点体力。",
+  ["mini__luanwu"] = "乱武",
+  [":mini__luanwu"] = "限定技，出牌阶段，你可以获得一张【杀】，然后令所有角色选择一项：1. 对除你以外距离最小的另一名角色使用【杀】；2. 失去1点体力。",
+
+  ["#mini__wansha-ask"] = "完杀：令一名体力值大于1的角色失去1点体力，出牌阶段结束时，其回复1点体力",
+  ["@mini__wansha-phase"] = "完杀",
+  ["#mini__luanwu-use"] = "乱武：对除贾诩以外距离最小的一名角色使用【杀】，否则失去1点体力",
+}
+
+local sunshangxiang = General(extension, "mini__sunshangxiang", "wu", 3, 3, General.Female)
+local mini__jieyin = fk.CreateActiveSkill{
+  name = "mini__jieyin",
+  anim_type = "support",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_num = 1,
+  card_filter = function(self, to_select, selected)
+    return #selected < 1
+  end,
+  target_filter = function(self, to_select, selected)
+    return Fk:currentRoom():getPlayerById(to_select).gender == General.Male and #selected < 1 and to_select ~= Self.id
+  end,
+  target_num = 1,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    room:throwCard(effect.cards, self.name, from, from)
+    if not from.dead then
+      from:drawCards(1, self.name)
+    end
+    if not to.dead then
+      to:drawCards(1, self.name)
+    end
+  end
+}
+
+sunshangxiang:addSkill(mini__jieyin)
+sunshangxiang:addSkill("xiaoji")
+
+Fk:loadTranslationTable{
+  ["mini__sunshangxiang"] = "孙尚香",
+  ["mini__jieyin"] = "结姻",
+  [":mini__jieyin"] = "出牌阶段限一次，你可以弃置一张牌并选择一名男性角色，你与其各摸一张牌。",
 }
 return extension
