@@ -709,10 +709,12 @@ local mini__huoshou = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
+    local room = player.room
     if event == fk.PreCardEffect then
+      room:notifySkillInvoked(player, self.name, "defensive")
       return true
     else
-      local room = player.room
+      room:notifySkillInvoked(player, self.name, "offensive")
       room:doIndicate(player.id, {target.id})
       room:throwCard(self.cost_data, self.name, player, player)
       data.damage = data.damage + 1
@@ -729,7 +731,7 @@ local mini__zaiqi = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local cids = room:getNCards(player:usedSkillTimes(self.name, Player.HistoryGame) + 1)
+    local cids = room:getNCards(player:usedSkillTimes(self.name, Player.HistoryGame))
     room:moveCards{
       ids = cids,
       toArea = Card.Processing,
