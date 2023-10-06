@@ -983,4 +983,39 @@ Fk:loadTranslationTable{
   ["mini__jieyin"] = "结姻",
   [":mini__jieyin"] = "出牌阶段限一次，你可以弃置一张牌并选择一名男性角色，你与其各摸一张牌。",
 }
+
+local pangde = General(extension, "mini__pangde", "qun", 4)
+
+local jianchu = fk.CreateTriggerSkill{
+  name = "mini__jianchu",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified},
+  can_trigger = function(self, event, target, player, data)
+    if not (target == player and player:hasSkill(self.name)) then return end
+    local to = player.room:getPlayerById(data.to)
+    return data.card.trueName == "slash" and not to:isNude()
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(data.to)
+    local id = room:askForCardChosen(player, to, "he", self.name)
+    room:throwCard({id}, self.name, to, player)
+    local card = Fk:getCardById(id)
+    if card.type == Card.TypeEquip then
+      data.disresponsive = true
+    else
+      room:obtainCard(player.id, card, true)
+    end
+  end,
+}
+
+pangde:addSkill("mashu")
+pangde:addSkill(jianchu)
+
+Fk:loadTranslationTable{
+  ["mini__pangde"] = "庞德",
+  ["mini__jianchu"] = "鞬出",
+  [":mini__jianchu"] = "当你使用【杀】指定目标后，你可弃置其一张牌，若此牌：为装备牌，其不能使用【闪】抵消此【杀】；不为装备牌，你获得此牌。",
+}
+
 return extension
