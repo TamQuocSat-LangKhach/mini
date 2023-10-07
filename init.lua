@@ -3,6 +3,7 @@ local extension = Package("mini")
 Fk:loadTranslationTable{
   ["mini"] = "小程序",
   ["miniex"] = "极",
+  ["mini_sp"] = "小程序",
 }
 
 local lvbu = General(extension, "miniex__lvbu", "qun", 4)
@@ -585,7 +586,7 @@ local mini__huoshou = fk.CreateTriggerSkill{
       if event == fk.PreCardEffect then
         return data.to == player.id
       else
-        return target ~= player
+        return target ~= player and not player:isKongcheng()
       end
     end
   end,
@@ -646,6 +647,12 @@ local mini__zaiqi = fk.CreateTriggerSkill{
     dummy:addSubcards(cards[choice])
     room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
     room:addPlayerMark(player, "@mini__zaiqi")
+    cids = table.filter(cids, function(id) return room:getCardArea(id) == Card.Processing end)
+    room:moveCards{
+      ids = cids,
+      toArea = Card.DiscardPile,
+      moveReason = fk.ReasonJustMove,
+    }
     return true
   end,
 }
@@ -1016,6 +1023,171 @@ Fk:loadTranslationTable{
   ["mini__pangde"] = "庞德",
   ["mini__jianchu"] = "鞬出",
   [":mini__jianchu"] = "当你使用【杀】指定目标后，你可弃置其一张牌，若此牌：为装备牌，其不能使用【闪】抵消此【杀】；不为装备牌，你获得此牌。",
+}
+
+local jiangwei = General(extension, "mini_sp__jiangwei", "wei", 4)
+local kunfen = fk.CreateTriggerSkill{
+  name = "mini_sp__kunfen",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:loseHp(player, 1, self.name)
+    if not player.dead then player:drawCards(2, self.name) end
+  end,
+}
+local fengliang = fk.CreateTriggerSkill{
+  name = "mini_sp__fengliang",
+  anim_type = "defensive",
+  events = {fk.EnterDying},
+  frequency = Skill.Wake,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return player.dying
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:changeMaxHp(player, -1)
+    if not player.dead then
+      room:recover({
+        who = player,
+        num = 3 - player.hp,
+        recoverBy = player,
+        skillName = self.name
+      })
+      room:handleAddLoseSkills(player, "m_ex__tiaoxin", nil)
+    end
+  end,
+}
+jiangwei:addSkill(kunfen)
+jiangwei:addSkill(fengliang)
+jiangwei:addRelatedSkill("m_ex__tiaoxin")
+Fk:loadTranslationTable{
+  ["mini_sp__jiangwei"] = "姜维",
+  ["mini_sp__kunfen"] = "困奋",
+  [":mini_sp__kunfen"] = "结束阶段开始时，你可失去1点体力，然后摸两张牌。",
+  ["mini_sp__fengliang"] = "逢亮",
+  [":mini_sp__fengliang"] = "觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值回复至3点，获得〖挑衅〗。",
+}
+
+local caoxiu = General(extension, "mini__caoxiu", "wei", 4)
+caoxiu:addSkill("qianju")
+local qingxi = fk.CreateTriggerSkill{
+  name = "mini__qingxi",
+  anim_type = "offensive",
+  events = {fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.to and data.to ~= player
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local n = player:getAttackRange()
+    if #room:askForDiscard(data.to, n, n, false, self.name, true, ".", "#qingxi-discard:::"..n) == n then
+      if player:getEquipment(Card.SubtypeWeapon) then
+        room:throwCard({player:getEquipment(Card.SubtypeWeapon)}, self.name, player, data.to)
+      end
+    else
+      data.damage = data.damage + 1
+    end
+  end,
+}
+caoxiu:addSkill(qingxi)
+Fk:loadTranslationTable{
+  ["mini__caoxiu"] = "曹休",
+  ["mini__qingxi"] = "倾袭",
+  [":mini__qingxi"] = "当你对其他角色造成伤害时，你可以令其选择一项：1.弃置X张手牌，然后弃置你装备区里的武器牌（X为你的攻击范围）；2.令此伤害+1。",
+}
+
+local xiahouyuan = General(extension, "mini__xiahouyuan", "wei", 4)
+local shensu = fk.CreateTriggerSkill{
+  name = "mini__shensu",
+  anim_type = "offensive",
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self.name) and not player:prohibitUse(Fk:cloneCard("slash")) then
+      if (data.to == Player.Judge and not player.skipped_phases[Player.Draw]) or data.to == Player.Play then
+        return true
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local slash = Fk:cloneCard("slash")
+    local max_num = slash.skill:getMaxTargetNum(player, slash)
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if not player:isProhibited(p, slash) then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 or max_num == 0 then return end
+    local tos = room:askForChoosePlayers(player, targets, 1, max_num, data.to == Player.Judge and "#mini__shensu1-choose" or "#mini__shensu2-choose", self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if data.to == Player.Judge then
+      player:skip(Player.Judge)
+      player:skip(Player.Draw)
+    else
+      player:skip(Player.Play)
+    end
+    local slash = Fk:cloneCard("slash")
+    slash.skillName = self.name
+    room:useCard({
+      from = target.id,
+      tos = table.map(self.cost_data, function(pid) return { pid } end),
+      card = slash,
+      extraUse = true,
+    })
+    return true
+  end,
+
+  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.CardUseFinished then
+      return (data.extra_data or {}).miniShensuNullified
+    else
+      return table.contains(data.card.skillNames, self.name) and room:getPlayerById(data.to):isAlive()
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.CardUseFinished then
+      for key, num in pairs(data.extra_data.miniShensuNullified) do
+        local p = room:getPlayerById(tonumber(key))
+        if p:getMark(fk.MarkArmorNullified) > 0 then
+          room:removePlayerMark(p, fk.MarkArmorNullified, num)
+        end
+      end
+
+      data.miniShensuNullified = nil
+    else
+      room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
+
+      data.extra_data = data.extra_data or {}
+      data.extra_data.miniShensuNullified = data.extra_data.miniShensuNullified or {}
+      data.extra_data.miniShensuNullified[tostring(data.to)] = (data.extra_data.miniShensuNullified[tostring(data.to)] or 0) + 1
+    end
+  end,
+}
+xiahouyuan:addSkill(shensu)
+Fk:loadTranslationTable{
+  ["mini__xiahouyuan"] = "夏侯渊",
+  ["mini__shensu"] = "神速",
+  [":mini__shensu"] = "①判定阶段开始前，你可跳过此阶段和摸牌阶段来视为使用无视防具的普【杀】。②出牌阶段开始前，你可跳过此阶段来视为使用无视防具的普【杀】。",
+
+  ["#mini__shensu1-choose"] = "神速：你可以跳过判定阶段和摸牌阶段，视为使用一张无距离限制、无视防具的【杀】",
+  ["#mini__shensu2-choose"] = "神速：你可以跳过出牌阶段，视为使用一张无距离限制、无视防具的【杀】",
 }
 
 return extension
