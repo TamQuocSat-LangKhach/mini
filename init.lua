@@ -1,4 +1,5 @@
 local extension = Package("mini")
+local U = require "packages/utility/utility"
 
 Fk:loadTranslationTable{
   ["mini"] = "小程序",
@@ -51,7 +52,7 @@ mini_xiaohu:addRelatedSkill(mini_xiaohu_targetmod)
 lvbu:addSkill("wushuang")
 lvbu:addSkill(mini_xiaohu)
 Fk:loadTranslationTable{
-  ["miniex__lvbu"] = "吕布",
+  ["miniex__lvbu"] = "极吕布",
   ["mini_xiaohu"] = "虓虎",
   [":mini_xiaohu"] = "你使用【杀】可以额外指定一个目标。出牌阶段开始时，你可以弃置一张手牌，获得一张【杀】。",
   ["#mini_xiaohu-invoke"] = "虓虎：你可以弃置一张手牌，获得一张【杀】",
@@ -203,7 +204,7 @@ mini_xiangzhi:addRelatedSkill(mini_xiangzhi_record)
 daqiao:addSkill(mini_xiangzhi)
 daqiao:addSkill(mini_jielie)
 Fk:loadTranslationTable{
-  ["miniex__daqiao"] = "大乔",
+  ["miniex__daqiao"] = "极大乔",
   ["mini_xiangzhi"] = "相知",
   [":mini_xiangzhi"] = "韵律技，出牌阶段限一次，平：你摸一张牌；仄：你回复1点体力。<br>转韵：你发动〖节烈〗后。<br>"..
   "<font color='grey'>\"<b>韵律技</b>\"<br>一种特殊的技能，分为“平”和“仄”两种状态。游戏开始时，韵律技处于“平”状态；满足“转韵”条件后，"..
@@ -218,6 +219,12 @@ Fk:loadTranslationTable{
   ["mini_jielie2"] = "其下次获得“相知”效果",
   ["#mini_jielie-use"] = "节烈：你可以使用一张牌，若为红色【杀】，%src 失去1点体力且可再次发动“节烈”",
   ["@@mini_xiangzhi"] = "相知",
+
+  ["$mini_xiangzhi1"] = "衣带逐水去，绿川盼君留。",
+  ["$mini_xiangzhi2"] = "溪边坐流水，与君共清欢。",
+  ["$mini_jielie1"] = "此生逢伯符，足以慰平生。",
+  ["$mini_jielie2"] = "所幸遇郎君，流离得良人。",
+  ["~miniex__daqiao"] = "忆君如流水，日夜无歇时……",
 }
 
 local xiaoqiao = General(extension, "miniex__xiaoqiao", "wu", 3, 3, General.Female)
@@ -316,7 +323,7 @@ mini_tongxin:addRelatedSkill(mini_tongxin_record)
 xiaoqiao:addSkill(mini_tongxin)
 xiaoqiao:addSkill(mini_shaoyan)
 Fk:loadTranslationTable{
-  ["miniex__xiaoqiao"] = "小乔",
+  ["miniex__xiaoqiao"] = "极小乔",
   ["mini_tongxin"] = "同心",
   [":mini_tongxin"] = "韵律技，出牌阶段限一次，平：你可以令一名其他角色交给你一张手牌，然后若其手牌数不大于你，其摸一张牌；"..
   "仄：你可以交给一名其他角色一张手牌，然后若其手牌数不小于你，你对其造成1点伤害。<br>转韵：出牌阶段，使用本回合未使用过的类型的牌。<br>"..
@@ -327,7 +334,21 @@ Fk:loadTranslationTable{
   ["#mini_tongxin-ping"] = "同心：令一名角色交给你一张手牌，然后若其手牌数不大于你，其摸一张牌",
   ["#mini_tongxin-ze"] = "同心：交给一名其他角色一张手牌，然后若其手牌数不小于你，你对其造成1点伤害",
   ["#mini_tongxin-give"] = "同心：你需交给 %src 一张手牌",
+
+  ["$mini_tongxin1"] = "嘘~心悦何须盟誓，二人同心足矣。",
+  ["$mini_tongxin2"] = "看！公瑾与我，如钱之两面，此方口自然为心！",
+  ["$mini_shaoyan1"] = "揽二乔于东南？哼，痴人说梦！",
+  ["$mini_shaoyan2"] = "有公瑾在，曹贼安可过江东天险？",
+  ["~miniex__xiaoqiao"] = "公瑾，好想你再拥我入怀……",
 }
+
+---@param room Room
+---@param player ServerPlayer
+---@param num integer @ 可以为负
+local function handleMiaolve(room, player, num)
+  room:addPlayerMark(player, "@mini_moulve", num)
+  room:handleAddLoseSkills(player, player:getMark("@mini_moulve") > 0 and "mini_miaoji" or "-mini_miaoji", nil, false, true)
+end
 
 local guojia = General(extension, "miniex__guojia", "wei", 3)
 local mini_suanlve = fk.CreateTriggerSkill{
@@ -339,9 +360,32 @@ local mini_suanlve = fk.CreateTriggerSkill{
       if event == fk.GameStart then
         return true
       elseif event == fk.EventPhaseStart then
-        return target == player and player.phase == Player.Start and player:getMark("@guojia_moulve") > player:getHandcardNum()
+        return target == player and player.phase == Player.Start and player:getMark("@mini_moulve") > player:getHandcardNum()
       elseif event == fk.TurnEnd then
-        return player:getMark("mini_suanlve-turn") >= player.hp
+        local x = 0
+        local room = player.room
+        local logic = room.logic
+        local e = logic:getCurrentEvent()
+        local end_id = e.id
+        local events = logic.event_recorder[GameEvent.UseCard] or Util.DummyTable
+        for i = #events, 1, -1 do
+          e = events[i]
+          if e.id <= end_id then break end
+          local use = e.data[1]
+          if use.from == player.id then
+            x = x + 1
+          end
+        end
+        events = logic.event_recorder[GameEvent.RespondCard] or Util.DummyTable
+        for i = #events, 1, -1 do
+          e = events[i]
+          if e.id <= end_id then break end
+          local use = e.data[1]
+          if use.from == player.id then
+            x = x + 1
+          end
+        end
+        return x >= player.hp
       end
     end
   end,
@@ -351,20 +395,12 @@ local mini_suanlve = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.GameStart then
-      room:addPlayerMark(player, "@guojia_moulve", 3)
+      handleMiaolve(room, player, 3)
     elseif event == fk.EventPhaseStart then
       player:drawCards(1, self.name)
     elseif event == fk.TurnEnd then
-      room:addPlayerMark(player, "@guojia_moulve", player.hp)
+      handleMiaolve(room, player, player.hp)
     end
-  end,
-
-  refresh_events = {fk.CardUsing, fk.CardResponding},
-  can_refresh = function(self, event, target, player, data)
-    return target == player
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "mini_suanlve-turn", 1)
   end,
 }
 local mini_dingce = fk.CreateViewAsSkill{
@@ -391,11 +427,11 @@ local mini_dingce = fk.CreateViewAsSkill{
     return card
   end,
   before_use = function(self, player, use)
-    player.room:removePlayerMark(player, "@guojia_moulve", player:usedSkillTimes(self.name, Player.HistoryRound) + 1)
+    handleMiaolve(player.room, player, - (player:usedSkillTimes(self.name, Player.HistoryRound) + 1))
   end,
   enabled_at_play = function(self, player)
     if player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 or player:getMark("mini_dingce-turn") == 0 or player:isNude() or
-      player:getMark("@guojia_moulve") < player:usedSkillTimes(self.name, Player.HistoryRound) + 1 then return false end
+      player:getMark("@mini_moulve") < player:usedSkillTimes(self.name, Player.HistoryRound) + 1 then return false end
     local card = Fk:cloneCard(player:getMark("mini_dingce-turn"))
     if card.skill:canUse(Self, card) and not Self:prohibitUse(card) then
       return true
@@ -403,7 +439,7 @@ local mini_dingce = fk.CreateViewAsSkill{
   end,
   enabled_at_response = function(self, player, response)
     if response or player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 or player:getMark("mini_dingce-turn") == 0 or player:isNude() or
-      player:getMark("@guojia_moulve") < player:usedSkillTimes(self.name, Player.HistoryRound) + 1 then return false end
+      player:getMark("@mini_moulve") < player:usedSkillTimes(self.name, Player.HistoryRound) + 1 then return false end
     local card = Fk:cloneCard(player:getMark("mini_dingce-turn"))
     if card.skill:canUse(Self, card) and not Self:prohibitUse(card) then
       return true
@@ -427,7 +463,7 @@ local mini_miaoji = fk.CreateViewAsSkill{
   interaction = function()
     local all_names, names = {"dismantlement", "nullification", "ex_nihilo"}, {}
     for _, name in ipairs(all_names) do
-      if Self:getMark("@guojia_moulve") >= table.indexOf(all_names, name) then
+      if Self:getMark("@mini_moulve") >= table.indexOf(all_names, name) then
         local card = Fk:cloneCard(name)
         if ((Fk.currentResponsePattern == nil and card.skill:canUse(Self, card) and not Self:prohibitUse(card)) or
             (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
@@ -449,15 +485,15 @@ local mini_miaoji = fk.CreateViewAsSkill{
   end,
   before_use = function(self, player, use)
     local names = {"dismantlement", "nullification", "ex_nihilo"}
-    player.room:removePlayerMark(player, "@guojia_moulve", table.indexOf(names, use.card.trueName))
+    handleMiaolve(player.room, player, - table.indexOf(names, use.card.trueName))
   end,
   enabled_at_play = function(self, player)
     if player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 then return false end
     local names = {"dismantlement", "nullification", "ex_nihilo"}
     for _, name in ipairs(names) do
-      if player:getMark("@guojia_moulve") >= table.indexOf(names, name) then
+      if player:getMark("@mini_moulve") >= table.indexOf(names, name) then
         local card = Fk:cloneCard(name)
-        if card.skill:canUse(Self, card) and not Self:prohibitUse(card) then
+        if Self:canUse(card) and not Self:prohibitUse(card) then
           return true
         end
       end
@@ -467,9 +503,9 @@ local mini_miaoji = fk.CreateViewAsSkill{
     if player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 then return false end
     local names = {"dismantlement", "nullification", "ex_nihilo"}
     for _, name in ipairs(names) do
-      if player:getMark("@guojia_moulve") >= table.indexOf(names, name) then
+      if player:getMark("@mini_moulve") >= table.indexOf(names, name) then
         local card = Fk:cloneCard(name)
-        if card.skill:canUse(Self, card) and not Self:prohibitUse(card) then
+        if Self:canUse(card) and not Self:prohibitUse(card) then
           return true
         end
       end
@@ -479,17 +515,196 @@ local mini_miaoji = fk.CreateViewAsSkill{
 guojia:addSkill(mini_suanlve)
 mini_dingce:addRelatedSkill(mini_dingce_record)
 guojia:addSkill(mini_dingce)
-guojia:addSkill(mini_miaoji)
+guojia:addRelatedSkill(mini_miaoji)
 Fk:loadTranslationTable{
-  ["miniex__guojia"] = "郭嘉",
+  ["miniex__guojia"] = "极郭嘉",
   ["mini_suanlve"] = "算略",
   [":mini_suanlve"] = "游戏开始时，你获得3点谋略值。准备阶段，若谋略值大于你的手牌数，你摸一张牌。"..
-  "每个回合结束时，若你本回合使用或打出过的牌数不小于体力值，你获得等同于体力值的谋略值。",
+  "每个回合结束时，若你本回合使用或打出过的牌数不小于体力值，你获得等同于体力值的谋略值。"..
+  "<font color='grey'>#\"<b>谋略值</b>\"<br/>有谋略值的角色拥有〖妙计〗。</font>",
   ["mini_dingce"] = "定策",
   [":mini_dingce"] = "每回合限一次，你可以消耗X+1点谋略值（X为你本轮发动此技能的次数），将一张牌当你本回合使用的上一张基本牌或普通锦囊牌使用。",
   ["mini_miaoji"] = "妙计",
   [":mini_miaoji"] = "每回合限一次，你可以消耗1~3点谋略值，视为使用对应的牌：1.【过河拆桥】；2.【无懈可击】；3.【无中生有】。",
-  ["@guojia_moulve"] = "谋略值",
+  ["@mini_moulve"] = "谋略值",
+}
+
+Fk:loadTranslationTable{
+  ["miniex__machao"] = "极马超",
+  ["mini_qipao"] = "弃袍",
+  [":mini_qipao"] = "当你使用【杀】指定目标后，你可令其选择一项：1. 弃置装备区内的所有牌（至少一张）；2. 本回合内非锁定技失效且不能响应你的牌。",
+  ["mini_zhuixi"] = "追袭",
+  [":mini_zhuixi"] = "结束阶段，若其他角色均处于你的攻击范围内，你可选择一名角色，视为对其使用【杀】。",
+}
+
+Fk:loadTranslationTable{
+  ["miniex__wolong"] = "极卧龙诸葛亮",
+  ["mini_sangu"] = "三顾",
+  [":mini_sangu"] = "锁定技，每当有三张牌指定你为目标后，你获得1点“谋略值”。"..
+  "<font color='grey'>#\"<b>谋略值</b>\"<br/>有谋略值的角色拥有〖妙计〗。</font>",
+  ["mini_yanshi"] = "演势",
+  [":mini_yanshi"] = "出牌阶段限一次，你可以观看牌堆顶和牌堆底的各一张牌，并获得其中一张。当你于此阶段使用此牌时，若此阶段你仅发动过一次〖演势〗，〖演势〗于此阶段内的发动次数上限+1。",
+}
+
+Fk:loadTranslationTable{
+  ["miniex__caocao"] = "极曹操",
+  ["mini_delu"] = "得鹿",
+  [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次“逐鹿”，胜者依次获得败者区域内的一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
+  "<br/><font color='grey'>#\"<b>逐鹿</b>\"<br/>即“共同拼点”，所有角色一起拼点比大小。",
+}
+local simayi = General(extension, "miniex__simayi", "wei", 3)
+
+local yinren = fk.CreateTriggerSkill{
+  name = "mini_yinren",
+  anim_type = "defensive",
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.to == Player.Play
+    and not (player:hasSkill("ex__jianxiong") and player:hasSkill("xingshang") and player:hasSkill("mingjian"))
+  end,
+  on_use = function(self, event, target, player, data)
+    for _, s in ipairs{"ex__jianxiong", "xingshang", "mingjian"} do
+      if not player:hasSkill(s) then
+        player.room:handleAddLoseSkills(player, s, nil)
+        return true
+      end
+    end
+  end,
+}
+
+local mini_duoquan_viewas = fk.CreateViewAsSkill{
+  name = "mini_duoquan_viewas",
+  card_filter = function(self, to_select, selected)
+    if #selected == 0 then
+      local ids = Self:getMark("mini_duoquan_cards")
+      return type(ids) == "table" and table.contains(ids, to_select)
+    end
+  end,
+  view_as = function(self, cards)
+    if #cards == 1 then
+      return Fk:getCardById(cards[1])
+    end
+  end,
+}
+Fk:addSkill(mini_duoquan_viewas)
+local duoquan = fk.CreateTriggerSkill{
+  name = "mini_duoquan",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
+    local target = room:askForChoosePlayers(player, targets, 1, 1, "#mini_duoquan", self.name, true)
+    if #target > 0 then
+      local cardType = room:askForChoice(player, {"basic", "trick", "equip"}, self.name)
+      self.cost_data = {target[1], cardType}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local target = room:getPlayerById(self.cost_data[1])
+    local cardType = self.cost_data[2]
+    local record = U.getMark(target, "_mini_duoquan")
+    local list = type(record[player.id]) == "table" and record[player.id] or {}
+    table.insert(list, cardType)
+    record[player.id] = list
+    room:setPlayerMark(target, "_mini_duoquan", record)
+  end,
+}
+local duoquan_delay = fk.CreateTriggerSkill{
+  name = "#mini_duoquan_delay",
+  events = {fk.CardUsing},
+  anim_type = "control",
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return target:getMark("_mini_duoquan") ~= 0 and target.phase == Player.Play and table.contains(target:getMark("_mini_duoquan")[player.id] or {}, data.card:getTypeString()) 
+    and target.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e) 
+      local use = e.data[1]
+      return use.from == target.id
+    end, Player.HistoryPhase)[1].id == target.room.logic:getCurrentEvent().id
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = target.room
+    room:doIndicate(player.id, {target.id})
+    if data.toCard ~= nil then
+      data.toCard = nil
+    else
+      data.nullifiedTargets = TargetGroup:getRealTargets(data.tos)
+    end
+    room:setPlayerMark(player, "mini_duoquan_cards", Card:getIdList(data.card))
+    room.logic:getCurrentEvent():addCleaner(function(s)
+      local ids = player:getMark("mini_duoquan_cards")
+      for _, id in ipairs(ids) do
+        if room:getCardArea(id) ~= Card.Processing then
+          return false
+        end
+      end
+      room:delay(800)
+      local move_to_notify = {}   ---@type CardsMoveStruct
+      move_to_notify.toArea = Card.PlayerHand
+      move_to_notify.to = player.id
+      move_to_notify.moveInfo = {}
+      move_to_notify.moveReason = fk.ReasonJustMove
+      for _, id in ipairs(ids) do
+        table.insert(move_to_notify.moveInfo,
+        { cardId = id, fromArea = Card.Void })
+      end
+      room:notifyMoveCards({player}, {move_to_notify})
+      room:setPlayerMark(player, "mini_duoquan_cards", ids)
+      local success, dat = room:askForUseActiveSkill(player, "mini_duoquan_viewas", "#mini_duoquan-invoke", true, Util.DummyTable, true)
+      room:setPlayerMark(player, "mini_duoquan_cards", 0)
+      move_to_notify = {}   ---@type CardsMoveStruct
+      move_to_notify.from = player.id
+      move_to_notify.toArea = Card.Void
+      move_to_notify.moveInfo = {}
+      move_to_notify.moveReason = fk.ReasonJustMove
+      for _, id in ipairs(ids) do
+        table.insert(move_to_notify.moveInfo,
+        { cardId = id, fromArea = Card.PlayerHand})
+      end
+      room:notifyMoveCards({player}, {move_to_notify})
+      if success then
+        local card = Fk.skills["mini_duoquan_viewas"]:viewAs(dat.cards)
+        player.room:useCard{
+          from = player.id,
+          tos = table.map(dat.targets, function(id) return {id} end),
+          card = card,
+        }
+      end
+    end)
+  end,
+
+  refresh_events = {fk.EventPhaseChanging},
+  can_refresh = function(self, event, target, player, data)
+    return player == target and target:getMark("_mini_duoquan") ~= 0 and data.from == Player.Play
+  end,
+  on_refresh = function(self, event, target, player, data)
+    target.room:setPlayerMark(target, "_mini_duoquan", 0)
+  end,
+}
+duoquan:addRelatedSkill(duoquan_delay)
+
+simayi:addSkill(yinren)
+simayi:addSkill(duoquan)
+simayi:addRelatedSkill("ex__jianxiong")
+simayi:addRelatedSkill("xingshang")
+simayi:addRelatedSkill("mingjian")
+
+Fk:loadTranslationTable{
+  ["miniex__simayi"] = "极司马懿",
+  ["mini_yinren"] = "隐忍",
+  [":mini_yinren"] = "出牌阶段开始前，你可跳过此阶段并获得以下技能中你没有的第一个技能：〖奸雄〗、〖行殇〗、〖明鉴〗。",
+  ["mini_duoquan"] = "夺权",
+  [":mini_duoquan"] = "结束阶段，你可秘密选择一名其他角色和一种类型，当其下个出牌阶段使用第一张牌时，若此牌的类型与你选择的类型相同，则你令其无效，然后当此牌结算完毕后，你可使用此牌对应的一张实体牌。", 
+  
+  ["#mini_duoquan"] = "夺权：你可秘密选择一名其他角色，确定后选择一种类型",
+  ["#mini_duoquan-invoke"] = "是否使用夺权，使用其中的牌",
+  ["#mini_duoquan_delay"] = "夺权",
+  ["mini_duoquan_viewas"] = "夺权",
 }
 
 local caocao = General(extension, "mini__caocao", "wei", 4)
@@ -504,7 +719,7 @@ local mini__jianxiong = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke("guixin")
+    player:broadcastSkillInvoke("guixin")
     local record = type(player:getMark("@$mini__jianxiong-turn")) == "table" and player:getMark("@$mini__jianxiong-turn") or {}
     table.insert(record, data.card.trueName)
     room:setPlayerMark(player, "@$mini__jianxiong-turn", record)
@@ -708,7 +923,7 @@ local mini__shenxian = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:broadcastSkillInvoke("shenxian")
+    player:broadcastSkillInvoke("shenxian")
     player:drawCards(1, self.name)
   end,
 }
@@ -773,7 +988,7 @@ local mini__renxin = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    room:broadcastSkillInvoke("renxin")
+    player:broadcastSkillInvoke("renxin")
     room:throwCard(self.cost_data, self.name, player, player)
     if not player.dead then
       room:damage{
@@ -843,7 +1058,7 @@ local mini__wansha = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke("wansha")
+    player:broadcastSkillInvoke("wansha")
     local target = room:getPlayerById(self.cost_data)
     room:setPlayerMark(player, "@mini__wansha-phase", target.general)
     room:setPlayerMark(player, "_mini__wansha-phase", target.id)
@@ -856,7 +1071,7 @@ local mini__wansha = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:notifySkillInvoked(player, self.name)
-    player.room:broadcastSkillInvoke("wansha")
+    player:broadcastSkillInvoke("wansha")
   end,
 }
 local mini__wansha_prohibit = fk.CreateProhibitSkill{
@@ -912,22 +1127,20 @@ local mini__luanwu = fk.CreateActiveSkill{
   card_filter = function() return false end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
-    room:broadcastSkillInvoke("luanwu")
+    player:broadcastSkillInvoke("luanwu")
     local cids = room:getCardsFromPileByRule("slash")
     if #cids > 0 then
       room:obtainCard(player, cids[1], false, fk.ReasonPrey)
     end
     local targets = room:getAlivePlayers()
-    room:doIndicate(player.id, table.map(targets, function (p) return p.id end))
+    room:doIndicate(player.id, table.map(targets, Util.IdMapper))
     for _, target in ipairs(targets) do
       local other_players = room:getOtherPlayers(target)
       local luanwu_targets = table.map(table.filter(other_players, function(p2)
         return table.every(other_players, function(p1)
           return target:distanceTo(p1) >= target:distanceTo(p2)
         end) and p2 ~= player
-      end), function (p)
-        return p.id
-      end)
+      end), Util.IdMapper)
       local use = room:askForUseCard(target, "slash", "slash", "#mini__luanwu-use", true, {exclusive_targets = luanwu_targets})
       if use then
         room:useCard(use)
