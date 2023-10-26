@@ -521,7 +521,7 @@ Fk:loadTranslationTable{
   ["mini_suanlve"] = "算略",
   [":mini_suanlve"] = "游戏开始时，你获得3点谋略值。准备阶段，若谋略值大于你的手牌数，你摸一张牌。"..
   "每个回合结束时，若你本回合使用或打出过的牌数不小于体力值，你获得等同于体力值的谋略值。"..
-  "<font color='grey'>#\"<b>谋略值</b>\"<br/>有谋略值的角色拥有〖妙计〗。</font>",
+  "<br><font color='grey'>#\"<b>谋略值</b>\"：有谋略值的角色拥有〖妙计〗。</font>",
   ["mini_dingce"] = "定策",
   [":mini_dingce"] = "每回合限一次，你可以消耗X+1点谋略值（X为你本轮发动此技能的次数），将一张牌当你本回合使用的上一张基本牌或普通锦囊牌使用。",
   ["mini_miaoji"] = "妙计",
@@ -529,19 +529,109 @@ Fk:loadTranslationTable{
   ["@mini_moulve"] = "谋略值",
 }
 
+local machao = General(extension, "miniex__machao", "shu", 4)
+
+local qipao = fk.CreateTriggerSkill{
+  name = "mini_qipao",
+  events = {fk.TargetSpecified},
+  anim_type = "offensive",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.card.trueName == "slash" and not player.room:getPlayerById(data.to).dead 
+  end,
+  on_cost = function(self, event, target, player, data)
+    return target.room:askForSkillInvoke(player, self.name, data, "#mini_qipao-ask::" .. data.to)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local target = room:getPlayerById(data.to)
+    local choices = {"mini_qipao_invalid:" .. player.id}
+    if #target:getCardIds(Player.Equip) > 0 then table.insert(choices, 1, "mini_qipao_discard") end
+    local choice = room:askForChoice(target, choices, self.name)
+    if choice == "mini_qipao_discard" then
+      target:throwAllCards("e")
+    else
+      local record = U.getMark(target, "@@mini_qipao-turn")
+      table.insert(record, player.id)
+      room:setPlayerMark(target, "@@mini_qipao-turn", record)
+      room:setPlayerMark(target, MarkEnum.UncompulsoryInvalidity .. "-turn", 1)
+    end
+  end,
+}
+local mini_qipao_dr = fk.CreateTriggerSkill{
+  name = "#mini_qipao_dr",
+  mute = true,
+  frequency = Skill.Compulsory,
+  events = {fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and table.contains(U.getMark(target, "@@mini_qipao-turn"), data.from)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local parentUseData = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+    parentUseData.data[1].disresponsiveList = parentUseData.data[1].disresponsiveList or {}
+    table.insertIfNeed(parentUseData.data[1].disresponsiveList, target.id)
+  end,
+}
+qipao:addRelatedSkill(mini_qipao_dr)
+
+local zhuixi = fk.CreateTriggerSkill{
+  name = "mini_zhuixi",
+  events = {fk.EventPhaseStart},
+  anim_type = "offensive",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and target.phase == Player.Finish and table.every(player.room.alive_players, function(p) return player:inMyAttackRange(p) or player == p end) and not player:prohibitUse(Fk:cloneCard("slash"))
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local slash = Fk:cloneCard("slash")
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if not player:isProhibited(p, slash) then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 then return end
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#mini_zhuixi-ask", self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local slash = Fk:cloneCard("slash")
+    slash.skillName = self.name
+    player.room:useCard{
+      from = target.id,
+      tos = table.map(self.cost_data, function(pid) return { pid } end),
+      card = slash,
+      extraUse = true,
+    }
+  end,
+}
+
+machao:addSkill(qipao)
+machao:addSkill(zhuixi)
+
 Fk:loadTranslationTable{
   ["miniex__machao"] = "极马超",
   ["mini_qipao"] = "弃袍",
-  [":mini_qipao"] = "当你使用【杀】指定目标后，你可令其选择一项：1. 弃置装备区内的所有牌（至少一张）；2. 本回合内非锁定技失效且不能响应你的牌。",
+  [":mini_qipao"] = "当你使用【杀】指定目标后，你可令其选择一项：1. 弃置装备区内的所有牌（至少一张）；2. 此回合非锁定技失效且不能响应你的牌。",
   ["mini_zhuixi"] = "追袭",
   [":mini_zhuixi"] = "结束阶段，若其他角色均处于你的攻击范围内，你可选择一名角色，视为对其使用【杀】。",
+
+  ["#mini_qipao-ask"] = "你可对 %dest 发动“弃袍”",
+  ["mini_qipao_discard"] = "弃置装备区内的所有牌",
+  ["mini_qipao_invalid"] = "此回合非锁定技失效且不能响应%src的牌",
+  ["@@mini_qipao-turn"] = "弃袍",
+  ["#mini_qipao_dr"] = "弃袍",
+  ["#mini_zhuixi-ask"] = "追袭：你可选择一名角色，视为对其使用【杀】",
 }
 
 Fk:loadTranslationTable{
   ["miniex__wolong"] = "极卧龙诸葛亮",
   ["mini_sangu"] = "三顾",
   [":mini_sangu"] = "锁定技，每当有三张牌指定你为目标后，你获得1点“谋略值”。"..
-  "<font color='grey'>#\"<b>谋略值</b>\"<br/>有谋略值的角色拥有〖妙计〗。</font>",
+  "<br><font color='grey'>#\"<b>谋略值</b>\"：有谋略值的角色拥有〖妙计〗。</font>",
   ["mini_yanshi"] = "演势",
   [":mini_yanshi"] = "出牌阶段限一次，你可以观看牌堆顶和牌堆底的各一张牌，并获得其中一张。当你于此阶段使用此牌时，若此阶段你仅发动过一次〖演势〗，〖演势〗于此阶段内的发动次数上限+1。",
 }
@@ -552,6 +642,7 @@ Fk:loadTranslationTable{
   [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次“逐鹿”，胜者依次获得败者区域内的一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
   "<br/><font color='grey'>#\"<b>逐鹿</b>\"<br/>即“共同拼点”，所有角色一起拼点比大小。",
 }
+
 local simayi = General(extension, "miniex__simayi", "wei", 3)
 
 local yinren = fk.CreateTriggerSkill{
@@ -597,7 +688,7 @@ local duoquan = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
-    local target = room:askForChoosePlayers(player, targets, 1, 1, "#mini_duoquan", self.name, true)
+    local target = room:askForChoosePlayers(player, targets, 1, 1, "#mini_duoquan", self.name, true, true)
     if #target > 0 then
       local cardType = room:askForChoice(player, {"basic", "trick", "equip"}, self.name)
       self.cost_data = {target[1], cardType}
