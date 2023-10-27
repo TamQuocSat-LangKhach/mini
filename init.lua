@@ -700,9 +700,9 @@ local duoquan = fk.CreateTriggerSkill{
     local target = room:getPlayerById(self.cost_data[1])
     local cardType = self.cost_data[2]
     local record = U.getMark(target, "_mini_duoquan")
-    local list = type(record[player.id]) == "table" and record[player.id] or {}
+    local list = type(record[tostring(player.id)]) == "table" and record[tostring(player.id)] or {}
     table.insert(list, cardType)
-    record[player.id] = list
+    record[tostring(player.id)] = list
     room:setPlayerMark(target, "_mini_duoquan", record)
   end,
 }
@@ -712,7 +712,7 @@ local duoquan_delay = fk.CreateTriggerSkill{
   anim_type = "control",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return target:getMark("_mini_duoquan") ~= 0 and target.phase == Player.Play and table.contains(target:getMark("_mini_duoquan")[player.id] or {}, data.card:getTypeString()) 
+    return target:getMark("_mini_duoquan") ~= 0 and target.phase == Player.Play and table.contains(target:getMark("_mini_duoquan")[tostring(player.id)] or {}, data.card:getTypeString()) 
     and target.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e) 
       local use = e.data[1]
       return use.from == target.id
