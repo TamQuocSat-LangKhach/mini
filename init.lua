@@ -654,7 +654,7 @@ local yanshi = fk.CreateActiveSkill{
   name = "mini_yanshi",
   anim_type = "drawcard",
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == player:getMark("_mini_yanshi")
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   target_num = 0,
   card_num = 0,
@@ -697,7 +697,7 @@ local yanshi_delay = fk.CreateTriggerSkill{
         table.forEach(Card:getIdList(data.card), function(id)
           return room:setCardMark(Fk:getCardById(id), "@@mini_yanshi", 0)
         end)
-        room:addPlayerMark(player, "_mini_yanshi", num)
+        player:setSkillUseHistory("mini_yanshi", 0, Player.HistoryPhase)
       end
     else
       for _, move in ipairs(data) do
@@ -724,7 +724,7 @@ Fk:loadTranslationTable{
   [":mini_sangu"] = "锁定技，每当有三张牌指定你为目标后，你获得1点“谋略值”。"..
   "<br><font color='grey'>#\"<b>谋略值</b>\"：谋略值上限为5，有谋略值的角色拥有〖妙计〗。</font>",
   ["mini_yanshi"] = "演势",
-  [":mini_yanshi"] = "出牌阶段限一次，你可以观看牌堆顶和牌堆底的各一张牌，并获得其中一张。当你于此阶段使用此牌时，〖演势〗于此阶段内的发动次数上限+1。",
+  [":mini_yanshi"] = "出牌阶段限一次，你可以观看牌堆顶和牌堆底的各一张牌，并获得其中一张。当你于此阶段使用此牌时，〖演势〗于此阶段内视为未发动过。",
 
   ["@mini_sangu"] = "三顾",
   ["@@mini_yanshi"] = "演势",
