@@ -3,8 +3,9 @@ local U = require "packages/utility/utility"
 
 Fk:loadTranslationTable{
   ["mini"] = "小程序",
-  ["miniex"] = "小程序",
+  ["miniex"] = "小程序", -- 极
   ["mini_sp"] = "小程序",
+  ["mini_ex"] = "小程序界",
 }
 
 local lvbu = General(extension, "miniex__lvbu", "qun", 4)
@@ -530,7 +531,7 @@ Fk:loadTranslationTable{
 }
 
 local machao = General(extension, "miniex__machao", "qun", 4)
-
+machao.subkingdom = "shu"
 local qipao = fk.CreateTriggerSkill{
   name = "mini_qipao",
   events = {fk.TargetSpecified},
@@ -901,10 +902,14 @@ local delu = fk.CreateActiveSkill{
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
+    player:drawCards(1, self.name)
+    if player:isKongcheng() then return end
     local targets = effect.tos
-    local pd = player:pindian(table.map(targets, Util.Id2PlayerMapper), self.name)
+    targets = table.filter(table.map(targets, Util.Id2PlayerMapper), function(p) return not (p:isKongcheng() or p.dead) end)
+    local pd = player:pindian(targets, self.name)
     local pdNum = {}
     pdNum[player.id] = pd.fromCard.number
+    targets = table.map(targets, Util.IdMapper)
     table.forEach(targets, function(pid) pdNum[pid] = pd.results[pid].toCard.number end)
     local winner, num = nil, nil
     for k, v in pairs(pdNum) do
@@ -925,7 +930,7 @@ local delu = fk.CreateActiveSkill{
       for _, pid in ipairs(targets) do
         local p = room:getPlayerById(pid)
         if not p:isAllNude() then
-          local id = room:askForCardChosen(winner, p, "hej", self.name)
+          local id = room:askForCardChosen(winner, p, "hej", self.name, "#mini_delu_get::" .. p.id)
           room:obtainCard(winner, id, false, fk.ReasonPrey)
         end
       end
@@ -1020,12 +1025,13 @@ miniex__caocao:addSkill("hujia") -- 村
 Fk:loadTranslationTable{
   ["miniex__caocao"] = "极曹操",
   ["mini_delu"] = "得鹿",
-  [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次“逐鹿”，赢的角色依次获得没赢的角色区域内的一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
+  [":mini_delu"] = "出牌阶段限一次，你选择任意名体力值不大于你的角色，你摸一张牌，与这些角色进行一次“逐鹿”，赢的角色依次获得没赢的角色区域内的一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
   "<br/><font color='grey'>#\"<b>逐鹿</b>\"<br/>即“共同拼点”，所有角色一起拼点比大小。",
   ["mini_zhujiu"] = "煮酒",
   [":mini_zhujiu"] = "出牌阶段限一次，你可选择一名其他角色，你与其同时选择一张手牌并交换，若这两张牌颜色相同/不同，你回复1点体力/你对其造成1点伤害。",
 
   ["#mini_delu_delay"] = "得鹿",
+  ["#mini_delu_get"] = "得鹿：获得%dest区域内一张牌",
   ["#askForZhujiu"] = "煮酒：选择一张手牌交换",
 }
 
@@ -1903,12 +1909,16 @@ local qingxi = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local n = player:getAttackRange()
-    if #room:askForDiscard(data.to, n, n, false, self.name, true, ".", "#qingxi-discard:::"..n) == n then
-      if player:getEquipment(Card.SubtypeWeapon) then
-        room:throwCard({player:getEquipment(Card.SubtypeWeapon)}, self.name, player, data.to)
-      end
-    else
+    if n > data.to:getHandcardNum() then
       data.damage = data.damage + 1
+    else
+      if #room:askForDiscard(data.to, n, n, false, self.name, true, ".", "#qingxi-discard:::"..n) == n then
+        if #player:getEquipments(Card.SubtypeWeapon) > 0 then
+          room:throwCard(player:getEquipments(Card.SubtypeWeapon), self.name, player, data.to)
+        end
+      else
+        data.damage = data.damage + 1
+      end
     end
   end,
 }
@@ -2004,6 +2014,65 @@ Fk:loadTranslationTable{
 
   ["#mini__shensu1-choose"] = "神速：你可以跳过判定阶段和摸牌阶段，视为使用一张无距离限制、无视防具的【杀】",
   ["#mini__shensu2-choose"] = "神速：你可以跳过出牌阶段，视为使用一张无距离限制、无视防具的【杀】",
+}
+
+local zhaoyun = General(extension, "mini_ex__zhaoyun", "shu", 4)
+local longdan = fk.CreateViewAsSkill{
+  name = "mini_ex__longdan",
+  pattern = "slash,jink",
+  card_filter = function(self, to_select, selected)
+    if #selected == 1 then return false end
+    local _c = Fk:getCardById(to_select)
+    local c
+    if _c.trueName == "slash" then
+      c = Fk:cloneCard("jink")
+    elseif _c.name == "jink" then
+      c = Fk:cloneCard("slash")
+    else
+      return false
+    end
+    return (Fk.currentResponsePattern == nil and Self:canUse(c)) or (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(c))
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then
+      return nil
+    end
+    local _c = Fk:getCardById(cards[1])
+    local c
+    if _c.trueName == "slash" then
+      c = Fk:cloneCard("jink")
+    elseif _c.name == "jink" then
+      c = Fk:cloneCard("slash")
+    end
+    c.skillName = self.name
+    c:addSubcard(cards[1])
+    return c
+  end,
+  before_use = function(self, player, use)
+    if use.card.trueName == "slash" then use.extraUse = true end
+    player:broadcastSkillInvoke("ex__longdan")
+  end,
+}
+local yajiao = fk.CreateTriggerSkill{
+  name = "mini_ex__yajiao",
+  anim_type = "drawcard",
+  events = {fk.CardUsing, fk.CardResponding},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.NotActive and U.IsUsingHandcard(player, data)
+  end,
+  on_use = function(self, event, target, player, data)
+    player:broadcastSkillInvoke("yajiao")
+    player:drawCards(1, self.name)
+  end
+}
+zhaoyun:addSkill(longdan)
+zhaoyun:addSkill(yajiao)
+Fk:loadTranslationTable{
+  ["mini_ex__zhaoyun"] = "界赵云",
+  ["mini_ex__longdan"] = "龙胆",
+  [":mini_ex__longdan"] = "你可将【杀】当【闪】、【闪】当【杀】使用或打出，以此使用的【杀】不计入次数。",
+  ["mini_ex__yajiao"] = "涯角",
+  [":mini_ex__yajiao"] = "当你于回合外使用或打出手牌时，你可摸一张牌。",
 }
 
 return extension
