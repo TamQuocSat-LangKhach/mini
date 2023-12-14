@@ -1000,7 +1000,7 @@ local zhujiu = fk.CreateActiveSkill{
       reason = self.name,
     }
     local prompt = "#askForZhujiu"
-    local data = { "choose_cards_skill", prompt, true, json.encode(extraData) }
+    local data = { "choose_cards_skill", prompt, true, extraData }
     local fromCard, toCard
     local targets = {player, target}
     for _, to in ipairs(targets) do
