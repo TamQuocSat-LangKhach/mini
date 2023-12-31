@@ -1227,6 +1227,87 @@ Fk:loadTranslationTable{
   ["#mini_duoquan-ask"] = "夺权：观看%dest的手牌，选择一种类型",
 }
 
+local mini__godzhugeliang = General(extension, "mini__godzhugeliang", "god", 3)
+local mini__qixing = fk.CreateTriggerSkill{
+  name = "mini__qixing",
+  anim_type = "defensive",
+  events = {fk.EnterDying},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local judge = {
+      who = player,
+      reason = self.name,
+      pattern = ".|8~13",
+    }
+    room:judge(judge)
+    if judge.card.number > 7 then
+      room:recover { num = 1, skillName = self.name, who = player, recoverBy = player}
+    end
+  end,
+}
+mini__godzhugeliang:addSkill(mini__qixing)
+local mini__tianfa = fk.CreateTriggerSkill{
+  name = "mini__tianfa",
+  anim_type = "offensive",
+  events = {fk.TurnEnd, fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) then
+      if event == fk.CardUseFinished then
+        return player.phase == Player.Play and data.card.type == Card.TypeTrick and player:getMark("mini__tianfa_count-turn") > 1
+      else
+        return player:getMark("@mini__punish-turn") > 0
+      end
+    end
+  end,
+  on_cost = function (self, event, target, player, data)
+    if event == fk.CardUseFinished then return true end
+    local n = player:getMark("@mini__punish-turn")
+    local tos = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, n, "#mini__tianfa-choose:::"..n, self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.CardUseFinished then
+      room:setPlayerMark(player, "mini__tianfa_count-turn", 0)
+      room:addPlayerMark(player, "@mini__punish-turn", 1)
+    else
+      local tos = self.cost_data
+      room:sortPlayersByAction(tos)
+      for _, pid in ipairs(tos) do
+        local p = room:getPlayerById(pid)
+        if not p.dead then
+          room:damage { from = player, to = p, damage = 1, skillName = self.name }
+        end
+      end
+    end
+  end,
+
+  refresh_events = {fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and data.card.type == Card.TypeTrick
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:addPlayerMark(player, "mini__tianfa_count-turn", 1)
+  end,
+}
+mini__godzhugeliang:addSkill(mini__tianfa)
+mini__godzhugeliang:addSkill("mini_jifeng")
+Fk:loadTranslationTable{
+  ["mini__godzhugeliang"] = "神诸葛",
+  ["mini__qixing"] = "七星",
+  [":mini__qixing"] = "每轮限一次，当你进入濒死状态时，你可以进行判定，若判定结果的点数大于7，你回复1点体力。",
+  ["mini__tianfa"] = "天罚",
+  [":mini__tianfa"] = "你每于出牌阶段使用两张锦囊后，你于本回合内获得1枚“罚”标记。回合结束时，你可以对至多X名其他角色依次造成1点伤害（X为“罚”数）。",
+  ["@mini__punish-turn"] = "罚",
+  ["#mini__tianfa-choose"] = "天罚：你可以对至多 %arg 名其他角色依次造成1点伤害",
+}
+
 local liuling = General(extension, "liuling", "qun", 3)
 local jiusong = fk.CreateViewAsSkill{
   name = "jiusong",
@@ -1259,66 +1340,36 @@ local jiusong_trig = fk.CreateTriggerSkill{
 jiusong:addRelatedSkill(jiusong_trig)
 local maotao = fk.CreateTriggerSkill{
   name = "maotao",
-  events = {fk.CardUsing},
+  events = {fk.AfterCardTargetDeclared},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) and player:getMark("@liuling_drunk") > 0 and #TargetGroup:getRealTargets(data.tos) == 1 then
-      return table.every(player.room.alive_players, function(p) return not p.dying end)
-    end
+    return player:hasSkill(self) and player:getMark("@liuling_drunk") > 0 and target ~= player
+    and #U.getActualUseTargets(player.room, data, event) == 1
   end,
   on_cost = function(self, event, target, player, data)
-    return player.room:askForSkillInvoke(player, self.name, data, "#maotao-ask:::" .. data.card:toLogString())
+    return player.room:askForSkillInvoke(player, self.name, data, "#maotao-ask::"..data.from..":".. data.card:toLogString())
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:removePlayerMark(player, "@liuling_drunk")
-
-    -- copy from xxyheaven ❤
-    local orig_to = data.tos[1]
-    local targets = {}
-    if #orig_to > 1 then
-      --target_filter check, for collateral,diversion...
-      local c_pid
-      --FIXME：借刀需要补modTargetFilter，不给targetFilter传使用者真是离大谱，目前只能通过强制修改Self来实现
-      local Notify_from = room:getPlayerById(data.from)
-      Self = Notify_from
-      for _, p in ipairs(room.alive_players) do
-        if not player:isProhibited(p, data.card) and data.card.skill:modTargetFilter(p.id, {}, data.from, data.card, false) then
-          local ho_spair_target = {}
-          local ho_spair_check = true
-          for i = 2, #orig_to, 1 do
-            c_pid = orig_to[i]
-            if not data.card.skill:targetFilter(c_pid, ho_spair_target, {}, data.card) then
-              ho_spair_check = false
-              break
-            end
-            table.insert(ho_spair_target, c_pid)
-          end
-          if ho_spair_check then
-            table.insert(targets, p.id)
-          end
-        end
-      end
-    else
-      for _, p in ipairs(room.alive_players) do
-        if not player:isProhibited(p, data.card) and (data.card.sub_type == Card.SubtypeDelayedTrick or
-        data.card.skill:modTargetFilter(p.id, {}, data.from, data.card, false)) then
-          table.insert(targets, p.id)
-        end
+    local targetsID = {}
+    for _, p in ipairs(room.alive_players) do
+      if not table.contains(TargetGroup:getRealTargets(data.tos), p.id) and U.canTransferTarget(p, data, false) then
+        table.insert(targetsID, p.id)
       end
     end
-    if #targets > 0 then
-      local random_target = table.random(targets)
-      if random_target == orig_to[1] then
-        local cids = room:getCardsFromPileByRule("analeptic")
-        if #cids > 0 then
-          room:obtainCard(player, cids[1], false, fk.ReasonPrey)
-        end
-      else
-        orig_to[1] = random_target
-        data.tos = {orig_to}
-      end
+    if #targetsID > 0 then
+      local toId = table.random(targetsID)
+      room:doIndicate(player.id, {toId})
+      local tos = {toId}
+      data.tos = table.map(data.tos, function (t) -- 日月戟
+        t[1] = toId
+        return t
+      end)
     else
-      data.tos = {}
+      local cids = room:getCardsFromPileByRule("analeptic")
+      if #cids > 0 then
+        room:obtainCard(player, cids[1], false, fk.ReasonPrey)
+      end
     end
   end,
 }
@@ -1342,13 +1393,13 @@ Fk:loadTranslationTable{
   ["jiusong"] = "酒颂",
   [":jiusong"] = "①你可将一张锦囊牌当【酒】使用。②当一名角色使用【酒】时，你获得1枚“醉”。（“醉”至多3枚）",
   ["maotao"] = "酕醄",
-  [":maotao"] = "当其他角色使用牌时，若目标数为1且没有处于濒死状态的角色，你可弃1枚“醉”标记，令此牌改为随机指定一个目标（不受距离限制）。若此目标与原目标相同，则你从牌堆中获得一张【酒】。",
+  [":maotao"] = "当其他角色使用牌时，若目标数为1且没有处于濒死状态的角色，你可弃1枚“醉”标记，若此牌有其他合法目标，令此牌改为随机指定一个合法目标（不受距离限制），否则你从牌堆中获得一张【酒】。", -- 〖酕醄〗若能改变目标，则必定会改变目标。
   ["bishi"] = "避仕",
   [":bishi"] = "锁定技，你不能成为伤害类锦囊牌的目标。",
 
   ["@liuling_drunk"] = "醉",
   ["#jiusong_trig"] = "酒颂",
-  ["#maotao-ask"] = "酕醄：你可1枚“醉”标记，随机改变%arg的目标",
+  ["#maotao-ask"] = "酕醄：你可弃1枚“醉”标记，随机改变%dest使用的%arg的目标",
 }
 
 local caocao = General(extension, "mini__caocao", "wei", 4)
