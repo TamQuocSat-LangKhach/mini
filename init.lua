@@ -1344,6 +1344,7 @@ local maotao = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self) and player:getMark("@liuling_drunk") > 0 and target ~= player
     and #U.getActualUseTargets(player.room, data, event) == 1
+    and table.every(player.room.alive_players, function(p) return not p.dying end)
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, data, "#maotao-ask::"..data.from..":".. data.card:toLogString())
