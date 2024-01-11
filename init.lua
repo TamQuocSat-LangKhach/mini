@@ -1243,7 +1243,7 @@ local mini__qixing = fk.CreateTriggerSkill{
       pattern = ".|8~13",
     }
     room:judge(judge)
-    if judge.card.number > 7 then
+    if judge.card.number > 7 and not player.dead then
       room:recover { num = 1, skillName = self.name, who = player, recoverBy = player}
     end
   end,
@@ -1299,7 +1299,7 @@ local mini__tianfa = fk.CreateTriggerSkill{
 mini__godzhugeliang:addSkill(mini__tianfa)
 mini__godzhugeliang:addSkill("mini_jifeng")
 Fk:loadTranslationTable{
-  ["mini__godzhugeliang"] = "神诸葛",
+  ["mini__godzhugeliang"] = "神诸葛亮",
   ["mini__qixing"] = "七星",
   [":mini__qixing"] = "每轮限一次，当你进入濒死状态时，你可以进行判定，若判定结果的点数大于7，你回复1点体力。",
   ["mini__tianfa"] = "天罚",
