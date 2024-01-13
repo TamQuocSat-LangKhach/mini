@@ -923,33 +923,19 @@ local delu = fk.CreateActiveSkill{
   max_target_num = 99,
   target_filter = function(self, to_select, selected, selected_cards)
     local target = Fk:currentRoom():getPlayerById(to_select)
-    return to_select ~= Self.id and target.hp <= Self.hp and not target:isKongcheng()
+    return to_select ~= Self.id and target.hp <= Self.hp and Self:canPindian(target)
   end,
   card_num = 0,
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local targets = effect.tos
-    targets = table.filter(table.map(targets, Util.Id2PlayerMapper), function(p) return not (p:isKongcheng() or p.dead) end)
-    local pd = player:pindian(targets, self.name)
-    local pdNum = {}
-    pdNum[player.id] = pd.fromCard.number
-    targets = table.map(targets, Util.IdMapper)
-    table.forEach(targets, function(pid) pdNum[pid] = pd.results[pid].toCard.number end)
-    local winner, num = nil, nil
-    for k, v in pairs(pdNum) do
-      if num == nil or num < v then
-        num = v
-        winner = k
-      elseif num == v then
-        winner = nil
-      end
-    end
+    local pd = U.jointPindian(player, table.map(targets, Util.Id2PlayerMapper), self.name)
+    local winner = pd.winner
     if winner then
       table.insert(targets, player.id)
-      table.removeOne(targets, winner)
-      if winner == player.id then player:broadcastSkillInvoke("guixin") end -- 彩蛋
-      winner = room:getPlayerById(winner)
+      table.removeOne(targets, winner.id)
+      if winner == player then player:broadcastSkillInvoke("guixin") end -- 彩蛋
       if winner.dead then return false end
       room:sortPlayersByAction(targets)
       for _, pid in ipairs(targets) do
@@ -1559,11 +1545,7 @@ local mini__zaiqi = fk.CreateTriggerSkill{
     room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
     room:addPlayerMark(player, "@mini__zaiqi")
     cids = table.filter(cids, function(id) return room:getCardArea(id) == Card.Processing end)
-    room:moveCards{
-      ids = cids,
-      toArea = Card.DiscardPile,
-      moveReason = fk.ReasonJustMove,
-    }
+    room:moveCardTo(cids, Card.DiscardPile, nil, fk.ReasonJustMove)
     return true
   end,
 }
