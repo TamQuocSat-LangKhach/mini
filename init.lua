@@ -57,6 +57,12 @@ Fk:loadTranslationTable{
   ["mini_xiaohu"] = "虓虎",
   [":mini_xiaohu"] = "你使用【杀】可以额外指定一个目标。出牌阶段开始时，你可以弃置一张手牌，获得一张【杀】。",
   ["#mini_xiaohu-invoke"] = "虓虎：你可以弃置一张手牌，获得一张【杀】",
+
+  ["$mini_xiaohu1"] = "趁势争利，所得远胜遵礼守义。",
+  ["$mini_xiaohu2"] = "时合当取之，岂能踌躇不行？",
+  ["$wushuang_miniex__lvbu1"] = "此身此武，天下无双！",
+  ["$wushuang_miniex__lvbu2"] = "乘赤兔，舞画戟，斩将破敌不过举手而为！",
+  ["~miniex__lvbu"] = "我天下无敌，却不能与貂蝉共度余生了……",
 }
 
 local daqiao = General(extension, "miniex__daqiao", "wu", 3, 3, General.Female)
@@ -525,10 +531,17 @@ Fk:loadTranslationTable{
   ["mini_miaoji"] = "妙计",
   [":mini_miaoji"] = "每回合限一次，你可以消耗1~3点谋略值，视为使用对应的牌：1.【过河拆桥】；2.【无懈可击】；3.【无中生有】。",
   ["@mini_moulue"] = "谋略值",
+
+  ["$mini_dingce1"] = "观天下之势，以措平乱之策。",
+  ["$mini_dingce2"] = "主公已有成略，进可依计而行。",
+  ["$mini_suanlve1"] = "敌我之人，皆可为我所欲。",
+  ["$mini_suanlve2"] = "谋，无主则困；事，无备则废。",
+  ["$mini_miaoji1"] = "计能规于未肇，虑能防于未然。",
+  ["$mini_miaoji2"] = "心静则神策生，虑远则计谋成。",
+  ["~miniex__guojia"] = "经此一别，已无再见之日……",
 }
 
-local machao = General(extension, "miniex__machao", "qun", 4)
-machao.subkingdom = "shu"
+local machao = General(extension, "miniex__machao", "shu", 4)
 local qipao = fk.CreateTriggerSkill{
   name = "mini_qipao",
   events = {fk.TargetSpecified},
@@ -614,6 +627,12 @@ Fk:loadTranslationTable{
   ["@@mini_qipao-turn"] = "弃袍",
   ["#mini_qipao_dr"] = "弃袍",
   ["#mini_zhuixi-ask"] = "追袭：你可选择一名角色，视为对其使用【杀】",
+
+  ["$mini_qipao1"] = "哼，凭汝瘦马断矛，安可伤我？",
+  ["$mini_qipao2"] = "汝与其行口舌之快，不若寻趁手之兵！",
+  ["$mini_zhuixi1"] = "万军在前，汝何敢拒我？",
+  ["$mini_zhuixi2"] = "此战为胜者生，汝敢战否？",
+  ["~miniex__machao"] = "曹贼！战场再见，吾必杀汝！",
 }
 
 local zhugeliang = General(extension, "miniex__zhugeliang", "shu", 3)
@@ -733,6 +752,14 @@ Fk:loadTranslationTable{
   ["@@mini_yanshi-phase"] = "演势",
   ["#mini_yanshi_choose"] = "演势：选择从牌堆顶或牌堆底摸一张牌",
   ["#mini_yanshi_only"] = "演势：从%arg摸一张牌",
+
+  ["$mini_sangu1"] = "大梦先觉，感三顾之诚，布天下三分。",
+  ["$mini_sangu2"] = "卧龙初晓，铭鱼水之情，托死生之志。",
+  ["$mini_yanshi1"] = "进荆州，取巴蜀，以成峙鼎三分之势。",
+  ["$mini_yanshi2"] = "天下虽多庸饶，亦在隆中方寸之间。",
+  ["$mini_miaoji_miniex__zhugeliang1"] = "大梦先觉，感三顾之诚，布天下三分。",
+  ["$mini_miaoji_miniex__zhugeliang2"] = "卧龙初晓，铭鱼水之情，托死生之志。",
+  ["~miniex__zhugeliang"] = "君臣鱼水犹昨日，煌煌天命终不归……",
 }
 
 local huangyueying = General(extension, "miniex__huangyueying", "shu", 3, 3, General.Female)
@@ -910,6 +937,12 @@ Fk:loadTranslationTable{
   ["mini_miaobi_penmanship"] = "妙笔",
   ["#mini_miaobi_delay"] = "妙笔：将一张锦囊牌交给 %src，否则其对你依次使用“妙笔”牌",
   ["#mini_miaobi-choose"] = "妙笔：选择对%dest使用的%arg的副目标",
+
+  ["$mini_miaobi1"] = "行舟泛知海，点墨启新灵。",
+  ["$mini_miaobi2"] = "纵横览前贤，风月皆成鉴。",
+  ["$mini_huixin1"] = "星霜岂堪渡，蕙心自娟娟。",
+  ["$mini_huixin2"] = "清心澄若水，兰蕙寄芳姿。",
+  ["~miniex__huangyueying"] = "纨质陨残暮，思旧梦魂远。",
 }
 
 local miniex__caocao = General(extension, "miniex__caocao", "wei", 4)
@@ -1205,12 +1238,18 @@ Fk:loadTranslationTable{
   [":mini_yinren"] = "回合开始时，你可跳过出牌阶段和弃牌阶段，然后获得以下技能中你没有的第一个技能：〖奸雄〗、〖行殇〗、〖明鉴〗。",
   ["mini_duoquan"] = "夺权",
   [":mini_duoquan"] = "结束阶段，你可观看一名其他角色的手牌，秘密选择一种类型，当其使用下一张牌时，若此牌的类型与你选择的类型相同，则你令取消之，然后当此牌结算完毕后，你可使用此牌对应的一张实体牌。",
-  
+
   ["#mini_duoquan"] = "夺权：你可选择一名其他角色，观看其手牌并秘密选择一种类型",
   ["#mini_duoquan-invoke"] = "是否使用夺权，使用其中的牌",
   ["#mini_duoquan_delay"] = "夺权",
   ["mini_duoquan_viewas"] = "夺权",
   ["#mini_duoquan-ask"] = "夺权：观看%dest的手牌，选择一种类型",
+
+  ["$mini_yinren1"] = "小隐于野，大隐于朝。",
+  ["$mini_yinren2"] = "进退有度，举重若轻。",
+  ["$mini_duoquan1"] = "曹氏三代基业，一朝尽入我手！",
+  ["$mini_duoquan2"] = "为政者不仁，自可夺之！",
+  ["~miniex__simayi"] = "辟基立业，就交于子元了……",
 }
 
 local mini__godzhugeliang = General(extension, "mini__godzhugeliang", "god", 3)
@@ -1353,7 +1392,7 @@ local maotao = fk.CreateTriggerSkill{
         return t
       end)
     else
-      local cids = room:getCardsFromPileByRule("analeptic")
+      local cids = room:getCardsFromPileByRule(".|.|.|.|.|trick")
       if #cids > 0 then
         room:obtainCard(player, cids[1], false, fk.ReasonPrey)
       end
@@ -1380,13 +1419,21 @@ Fk:loadTranslationTable{
   ["jiusong"] = "酒颂",
   [":jiusong"] = "①你可将一张锦囊牌当【酒】使用。②当一名角色使用【酒】时，你获得1枚“醉”。（“醉”至多3枚）",
   ["maotao"] = "酕醄",
-  [":maotao"] = "当其他角色使用牌时，若目标数为1且没有处于濒死状态的角色，你可弃1枚“醉”标记，若此牌有其他合法目标，令此牌改为随机指定一个合法目标（不受距离限制），否则你从牌堆中获得一张【酒】。", -- 〖酕醄〗若能改变目标，则必定会改变目标。
+  [":maotao"] = "当其他角色使用牌时，若目标数为1且没有处于濒死状态的角色，你可弃1枚“醉”，若此牌有其他合法目标，令此牌改为随机指定一个合法目标（不受距离限制），否则你从牌堆中获得一张锦囊牌。", -- 〖酕醄〗若能改变目标，则必定会改变目标。
   ["bishi"] = "避仕",
   [":bishi"] = "锁定技，你不能成为伤害类锦囊牌的目标。",
 
   ["@liuling_drunk"] = "醉",
   ["#jiusong_trig"] = "酒颂",
   ["#maotao-ask"] = "酕醄：你可弃1枚“醉”标记，随机改变%dest使用的%arg的目标",
+
+  ["$jiusong1"] = "大人以天地为一朝，以万期为须臾。",
+  ["$jiusong2"] = "以天为幕，以地为席！",
+  ["$maotao1"] = "痛饮酕醄，醉生梦死！",
+  ["$maotao2"] = "杜康既为酒圣，吾定为醉侯！",
+  ["$bishi1"] = "往矣！吾将曳尾于涂中。",
+  ["$bishi2"] = "仕途多舛，哪有醉卧山野痛快！",
+  ["~liuling"] = "哈……呼……（醉后鼾声渐小的声音）",
 }
 
 local caocao = General(extension, "mini__caocao", "wei", 4)
