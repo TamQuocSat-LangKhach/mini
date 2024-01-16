@@ -770,7 +770,7 @@ local miaobi = fk.CreateTriggerSkill{
     if target ~= player then return false end
     if event == fk.CardUseFinished then
       if not (player:hasSkill(self) and player.phase == Player.Play
-      and data.card.type == Card.TypeTrick and U.isPureCard(data.card) and not table.contains(U.getMark(player, "_mini_miaobi_used-turn"), data.card.trueName)) then return false end 
+      and data.card.type == Card.TypeTrick and U.isPureCard(data.card) and not table.contains(U.getMark(player, "_mini_miaobi_used-turn"), data.card.trueName)) then return false end
       local room = player.room
       if room:getCardArea(data.card) ~= Card.Processing then return false end
       local targets = {}
@@ -798,9 +798,9 @@ local miaobi = fk.CreateTriggerSkill{
           return true
         end
       else
-        local target = player.room:askForChoosePlayers(player, targets, 1, 1, "#mini_miaobi-ask:::" .. data.card:toLogString(), self.name)
-        if #target > 0 then
-          self.cost_data = target[1]
+        local tos = player.room:askForChoosePlayers(player, targets, 1, 1, "#mini_miaobi-ask:::" .. data.card:toLogString(), self.name)
+        if #tos > 0 then
+          self.cost_data = tos[1]
           return true
         end
       end
@@ -814,16 +814,16 @@ local miaobi = fk.CreateTriggerSkill{
       local record = U.getMark(player, "_mini_miaobi_used-turn")
       table.insert(record, data.card.trueName)
       room:setPlayerMark(player, "_mini_miaobi_used-turn", record)
-      local target = room:getPlayerById(self.cost_data)
-      target:addToPile("mini_miaobi_penmanship", data.card, true, self.name)
-      if table.contains(target:getPile("mini_miaobi_penmanship"), data.card.id) then
-        record = U.getMark(target, "_mini_miaobi")
+      local to = room:getPlayerById(self.cost_data)
+      to:addToPile("mini_miaobi_penmanship", data.card, true, self.name)
+      if table.contains(to:getPile("mini_miaobi_penmanship"), data.card.id) then
+        record = U.getMark(to, "_mini_miaobi")
         record[tostring(player.id)] = record[tostring(player.id)] or {}
         table.insert(record[tostring(player.id)], data.card.id)
-        room:setPlayerMark(target, "_mini_miaobi", record)
+        room:setPlayerMark(to, "_mini_miaobi", record)
       end
     else
-      local record = player:getMark("_mini_miaobi")
+      local record = table.simpleClone(player:getMark("_mini_miaobi"))
       for k, v in pairs(record) do
         local from = room:getPlayerById(tonumber(k))
         local cards = table.filter(v, function (cid)
@@ -836,7 +836,18 @@ local miaobi = fk.CreateTriggerSkill{
           end
           if #c > 0 then
             room:moveCardTo(c, Card.PlayerHand, from, fk.ReasonGive, self.name, nil, true, from.id)
-            room:moveCardTo(cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, "mini_miaobi_penmanship", true, player.id)
+            cards = table.filter(cards, function (cid)
+              return table.contains(player:getPile("mini_miaobi_penmanship"), cid)
+            end)
+            room:moveCards{
+              ids = cards,
+              info = table.map(cards, function(id) return {cardId = id, fromArea = Card.PlayerSpecial,
+                fromSpecialName = "mini_miaobi_penmanship"} end),
+              from = player.id,
+              toArea = Card.DiscardPile,
+              moveReason = fk.ReasonPutIntoDiscardPile,
+              skillName = self.name,
+            }
           else
             for _, cid in ipairs(cards) do
               local card = Fk:getCardById(cid)
@@ -848,9 +859,7 @@ local miaobi = fk.CreateTriggerSkill{
                     return card.skill:targetFilter(p.id, {player.id}, {}, card)
                   end)
                   if #targets > 0 then
-                    local to_slash = room:askForChoosePlayers(from, table.map(targets, function (p)
-                      return p.id
-                    end), 1, 1, "#mini_miaobi-choose::"..player.id..":"..card:toLogString(), self.name, false)
+                    local to_slash = room:askForChoosePlayers(from, table.map(targets, Util.IdMapper), 1, 1, "#mini_miaobi-choose::"..player.id..":"..card:toLogString(), self.name, false)
                     if #to_slash > 0 then
                       table.insert(tos, to_slash)
                     end
@@ -872,7 +881,15 @@ local miaobi = fk.CreateTriggerSkill{
           end
         end
         if #cards > 0 then
-          room:moveCardTo(cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, "mini_miaobi_penmanship", true, player.id)
+          room:moveCards{
+            ids = cards,
+            info = table.map(cards, function(id) return {cardId = id, fromArea = Card.PlayerSpecial,
+              fromSpecialName = "mini_miaobi_penmanship"} end),
+            from = player.id,
+            toArea = Card.DiscardPile,
+            moveReason = fk.ReasonPutIntoDiscardPile,
+            skillName = self.name,
+          }
         end
       end
       room:setPlayerMark(player, "_mini_miaobi", 0)
