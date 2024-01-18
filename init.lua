@@ -2208,4 +2208,31 @@ Fk:loadTranslationTable{
   [":mini_ex__yajiao"] = "当你于回合外使用或打出手牌时，你可摸一张牌。",
 }
 
+local mini__xushu = General(extension, "mini__xushu", "shu", 3)
+local wuyan = fk.CreateTriggerSkill{
+  name = "mini__wuyan",
+  anim_type = "defensive",
+  events = {fk.DamageInflicted},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.card and data.card.type == Card.TypeTrick
+  end,
+  on_use = Util.TrueFunc,
+}
+
+mini__xushu:addSkill(wuyan)
+mini__xushu:addSkill("jujian") -- 删了“复原武将牌”而已，因为小程序没翻面
+
+Fk:loadTranslationTable{
+  ["mini__xushu"] = "徐庶",
+  ["mini__wuyan"] = "无言",
+  [":mini__wuyan"] = "锁定技，当你受到锦囊牌造成的伤害时，防止此伤害。",
+
+  ["$mini__wuyan1"] = "别跟我说话！我想静静……",
+  ["$mini__wuyan2"] = "不忠不孝之人，不敢开口。",
+  ["$jujian_mini__xushu1"] = "大汉中兴，皆系此人。",
+  ["$jujian_mini__xushu2"] = "大贤不可屈就，将军需当亲往。",
+  ["~mini__xushu"] = "曹营无知己，夜夜思故人。",
+}
+
 return extension
