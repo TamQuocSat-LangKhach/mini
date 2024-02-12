@@ -1515,7 +1515,7 @@ local mini__kuanggu = fk.CreateTriggerSkill{
 
   refresh_events = {fk.BeforeHpChanged},
   can_refresh = function(self, event, target, player, data)
-    if data.damageEvent and player == data.damageEvent.from and player:distanceTo(target) < 2 then
+    if data.damageEvent and player == data.damageEvent.from and (target == player or player:distanceTo(target) == 1) then
       return true
     end
   end,
@@ -1530,7 +1530,7 @@ weiyan:addSkill(mini__kuanggu)
 Fk:loadTranslationTable{
   ["mini__weiyan"] = "魏延",
   ["mini__kuanggu"] = "狂骨",
-  [":mini__kuanggu"] = "锁定技，当你对小于2以内的一名角色造成1点伤害后，你回复1点体力并摸一张牌。",
+  [":mini__kuanggu"] = "锁定技，当你对距离1以内的一名角色造成1点伤害后，你回复1点体力并摸一张牌。",
 
   ["$mini__kuanggu1"] = "沙场驰骋，但求一败！",
   ["$mini__kuanggu2"] = "我自横扫天下，蔑视群雄又如何？",
@@ -1877,17 +1877,20 @@ local mini__luanwu = fk.CreateActiveSkill{
     local targets = room:getAlivePlayers()
     room:doIndicate(player.id, table.map(targets, Util.IdMapper))
     for _, target in ipairs(targets) do
-      local other_players = room:getOtherPlayers(target)
-      local luanwu_targets = table.map(table.filter(other_players, function(p2)
-        return table.every(other_players, function(p1)
-          return target:distanceTo(p1) >= target:distanceTo(p2)
-        end) and p2 ~= player
-      end), Util.IdMapper)
-      local use = room:askForUseCard(target, "slash", "slash", "#mini__luanwu-use", true, {exclusive_targets = luanwu_targets})
-      if use then
-        room:useCard(use)
-      else
-        room:loseHp(target, 1, self.name)
+      if not target.dead then
+        local other_players = room:getOtherPlayers(target)
+        local luanwu_targets = table.map(table.filter(other_players, function(p2)
+          return table.every(other_players, function(p1)
+            return target:distanceTo(p1) >= target:distanceTo(p2)
+          end) and p2 ~= player
+        end), Util.IdMapper)
+        local use = room:askForUseCard(target, "slash", "slash", "#mini__luanwu-use", true, {exclusive_targets = luanwu_targets})
+        if use then
+          use.extraUse = true
+          room:useCard(use)
+        else
+          room:loseHp(target, 1, self.name)
+        end
       end
     end
   end,
