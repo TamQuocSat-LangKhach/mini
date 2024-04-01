@@ -468,18 +468,20 @@ local mini_miaoji = fk.CreateViewAsSkill{
   name = "mini_miaoji",
   pattern = "dismantlement,nullification,ex_nihilo",
   interaction = function()
-    local all_names, names = {"dismantlement", "nullification", "ex_nihilo"}, {}
-    for _, name in ipairs(all_names) do
-      if Self:getMark("@mini_moulue") >= table.indexOf(all_names, name) then
+    local all_names = {["dismantlement"] = 1, ["nullification"] = 3, ["ex_nihilo"] = 3}
+    local names = {}
+    for name, v in pairs(all_names) do
+      if Self:getMark("@mini_moulue") >= v then
         local card = Fk:cloneCard(name)
-        if ((Fk.currentResponsePattern == nil and card.skill:canUse(Self, card) and not Self:prohibitUse(card)) or
+        if ((Fk.currentResponsePattern == nil and Self:canUse(card) and not Self:prohibitUse(card)) or
             (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
           table.insertIfNeed(names, name)
         end
       end
     end
-    if #names == 0 then return end
-    return UI.ComboBox {choices = names}
+    if #names > 0 then
+      return UI.ComboBox { choices = names, all_choices = {"dismantlement", "nullification", "ex_nihilo"} }
+    end
   end,
   card_filter = Util.FalseFunc,
   view_as = function(self, cards)
@@ -489,28 +491,17 @@ local mini_miaoji = fk.CreateViewAsSkill{
     return card
   end,
   before_use = function(self, player, use)
-    local names = {"dismantlement", "nullification", "ex_nihilo"}
-    handleMoulue(player.room, player, - table.indexOf(names, use.card.trueName))
-  end,
-  enabled_at_play = function(self, player)
-    if player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 then return false end
-    local names = {"dismantlement", "nullification", "ex_nihilo"}
-    for _, name in ipairs(names) do
-      if player:getMark("@mini_moulue") >= table.indexOf(names, name) then
-        local card = Fk:cloneCard(name)
-        if Self:canUse(card) and not Self:prohibitUse(card) then
-          return true
-        end
-      end
-    end
+    local names = {["dismantlement"] = 1, ["nullification"] = 3, ["ex_nihilo"] = 3}
+    handleMoulue(player.room, player, - names[use.card.trueName])
   end,
   enabled_at_response = function(self, player, response)
-    if player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 then return false end
-    local names = {"dismantlement", "nullification", "ex_nihilo"}
-    for _, name in ipairs(names) do
-      if player:getMark("@mini_moulue") >= table.indexOf(names, name) then
+    if response then return false end
+    local all_names = {["dismantlement"] = 1, ["nullification"] = 3, ["ex_nihilo"] = 3}
+    for name, v in pairs(all_names) do
+      if Self:getMark("@mini_moulue") >= v then
         local card = Fk:cloneCard(name)
-        if Self:canUse(card) and not Self:prohibitUse(card) then
+        if ((Fk.currentResponsePattern == nil and Self:canUse(card) and not Self:prohibitUse(card)) or
+            (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
           return true
         end
       end
@@ -529,7 +520,7 @@ Fk:loadTranslationTable{
   ["mini_dingce"] = "定策",
   [":mini_dingce"] = "每回合限一次，你可以消耗1点谋略值，将一张牌当你本回合使用的上一张基本牌或普通锦囊牌使用。",
   ["mini_miaoji"] = "妙计",
-  [":mini_miaoji"] = "每回合限一次，你可以消耗1~3点谋略值，视为使用对应的牌：1.【过河拆桥】；2.【无懈可击】；3.【无中生有】。",
+  [":mini_miaoji"] = "每回合限一次，你可以消耗1~3点谋略值，视为使用对应的牌：1.【过河拆桥】；3.【无懈可击】或【无中生有】。",
   ["@mini_moulue"] = "谋略值",
 
   ["$mini_dingce1"] = "观天下之势，以措平乱之策。",
@@ -965,6 +956,7 @@ Fk:loadTranslationTable{
 local miniex__caocao = General(extension, "miniex__caocao", "wei", 4)
 local delu = fk.CreateActiveSkill{
   name = "mini_delu",
+  prompt = "#mini_delu",
   anim_type = "control",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
@@ -991,8 +983,9 @@ local delu = fk.CreateActiveSkill{
       for _, pid in ipairs(targets) do
         local p = room:getPlayerById(pid)
         if not p:isAllNude() then
-          local id = room:askForCardChosen(winner, p, "hej", self.name, "#mini_delu_get::" .. p.id)
+          local id = table.random(p:getCardIds{ Player.Hand, Player.Equip, Player.Judge})
           room:obtainCard(winner, id, false, fk.ReasonPrey)
+          room:delay(100)
         end
       end
     end
@@ -1014,6 +1007,7 @@ delu:addRelatedSkill(delu_delay)
 
 local zhujiu = fk.CreateActiveSkill{
   name = "mini_zhujiu",
+  prompt = "#mini_zhujiu",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
@@ -1086,14 +1080,16 @@ miniex__caocao:addSkill("hujia") -- 村
 Fk:loadTranslationTable{
   ["miniex__caocao"] = "极曹操",
   ["mini_delu"] = "得鹿",
-  [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次“逐鹿”，赢的角色依次获得没赢的角色区域内的一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
-  "<br/><font color='grey'>#\"<b>逐鹿</b>\"<br/>即“共同拼点”，所有角色一起拼点比大小。",
+  [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次“逐鹿”，赢的角色依次获得没赢的角色区域内随机一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
+  "<br/><font color='grey'>#\"<b>逐鹿</b>\"即“共同拼点”，所有角色一起拼点比大小。",
   ["mini_zhujiu"] = "煮酒",
   [":mini_zhujiu"] = "出牌阶段限一次，你可选择一名其他角色，你与其同时选择一张手牌并交换，若这两张牌颜色相同/不同，你回复1点体力/你对其造成1点伤害。",
 
   ["#mini_delu_delay"] = "得鹿",
   ["#mini_delu_get"] = "得鹿：获得%dest区域内一张牌",
+  ["#mini_delu"] = "得鹿：你可与任意名体力值不大于你的角色共同拼点，<br />赢的角色依次获得没赢的角色区域内随机一张牌",
   ["#askForZhujiu"] = "煮酒：选择一张手牌交换",
+  ["#mini_zhujiu"] = "煮酒：你可选择一名其他角色，你与其同时选择一张手牌并交换，<br />若这两张牌颜色相同/不同，你回复1点体力/你对其造成1点伤害",
 
   ["$mini_delu1"] = "今吾得鹿中原，欲请诸雄会猎四方！",
   ["$mini_delu2"] = "天下所图者为何？哼！不过吾彀中之物尔！",
@@ -1267,6 +1263,111 @@ Fk:loadTranslationTable{
   ["$mini_duoquan1"] = "曹氏三代基业，一朝尽入我手！",
   ["$mini_duoquan2"] = "为政者不仁，自可夺之！",
   ["~miniex__simayi"] = "辟基立业，就交于子元了……",
+}
+
+local yuanshao = General(extension, "miniex__yuanshao", "qun", 4)
+
+local hongtu = fk.CreateActiveSkill{
+  name = "mini_hongtu",
+  anim_type = "offensive",
+  prompt = "#mini_hongtu",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and table.find(Fk:currentRoom().alive_players, function(p)
+      return player:canPindian(p) and player ~= p
+    end)
+  end,
+  target_filter = Util.FalseFunc,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local targets = table.filter(room.alive_players, function(p)
+      return player:canPindian(p) and player ~= p
+    end)
+    room:doIndicate(player.id, table.map(targets, Util.IdMapper))
+    local pd = U.jointPindian(player, targets, self.name)
+    local winner = pd.winner
+    if winner and not winner.dead then
+      local card = Fk:cloneCard("archery_attack")
+      if not U.canUseCard(room, winner, card) then return end
+      local tos = table.map(table.filter(room.alive_players, function(p)
+        return U.canUseCardTo(room, winner, p, card)
+      end), Util.IdMapper)
+      local use = { ---@type CardUseStruct
+        from = winner.id,
+        tos = table.map(tos, function(id) return {id} end),
+        card = card,
+        extraUse = true,
+      }
+      room:useCard(use)
+      if use.damageDealt and not player.dead then
+        local num = 0
+        for _, id in ipairs(tos) do
+          if use.damageDealt[id] then
+            num = num + use.damageDealt[id]
+          end
+        end
+        player:drawCards(num, self.name)
+      end
+    elseif not winner then
+      player:setSkillUseHistory(self.name, 0, Player.HistoryPhase)
+    end
+  end,
+}
+
+local damage_nature_table = {
+  [fk.NormalDamage] = "normal_damage",
+  [fk.FireDamage] = "fire_damage",
+  [fk.ThunderDamage] = "thunder_damage",
+  [fk.IceDamage] = "ice_damage",
+}
+
+local mengshou = fk.CreateTriggerSkill{
+  name = "mini_mengshou",
+  events = {fk.DamageInflicted},
+  anim_type = "defensive",
+  can_trigger = function (self, event, target, player, data)
+    if not (target == player and player:hasSkill(self) and data.from and data.from ~= player and player:usedSkillTimes(self.name) == 0) then return end
+    local x, y = 0, 0
+    player.room.logic:getActualDamageEvents(1, function(e)
+      local damage = e.data[1]
+      if damage.from == player then
+        x = x + 1
+      elseif damage.from == data.from then
+        y = y + 1
+      end
+      return false
+    end, Player.HistoryRound)
+    return y <= x
+  end,
+  on_cost = function (self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, data, "#mini_mengshou-ask::" .. data.from.id .. ":" .. data.damage .. ":" .. damage_nature_table[data.damageType])
+  end,
+  on_use = function (self, event, target, player, data)
+    player.room:sendLog{
+      type = "#BreastplateSkill",
+      from = player.id,
+      arg = self.name,
+      arg2 = data.damage,
+      arg3 = damage_nature_table[data.damageType],
+    }
+    return true
+  end
+}
+
+yuanshao:addSkill(hongtu)
+yuanshao:addSkill(mengshou)
+
+Fk:loadTranslationTable{
+  ["miniex__yuanshao"] = "极袁绍",
+  ["mini_hongtu"] = "鸿图",
+  [":mini_hongtu"] = "出牌阶段限一次，你可与所有其他角色进行一次“逐鹿”，然后若此次“逐鹿”：有胜者，则胜者视为使用一张【万箭齐发】，此牌结算结束后，你摸X张牌（X为受到此牌伤害的角色数）；没有胜者，则此技能视为此阶段未发动过。" ..
+  "<br/><font color='grey'>#\"<b>逐鹿</b>\"即“共同拼点”，所有角色一起拼点比大小。",
+  ["mini_mengshou"] = "盟首",
+  [":mini_mengshou"] = "每回合限一次，当你受到其他角色造成的伤害时，若其本轮造成的伤害值不大于你，你可防止此伤害。",
+
+  ["#mini_hongtu"] = "鸿图：你可与所有其他角色共同拼点，<br/>若有胜者，则胜者视为使用一张【万箭齐发】，此牌结算结束后，你摸X张牌（X为受到此牌伤害的角色数）；<br/>没有胜者，则此技能视为此阶段未发动过",
+  ["#mini_mengshou-ask"] = "盟首：你可防止 %dest 造成的 %arg 点 %arg2 伤害",
 }
 
 local mini__godzhugeliang = General(extension, "mini__godzhugeliang", "god", 3)
