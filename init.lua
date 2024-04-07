@@ -494,8 +494,11 @@ local mini_miaoji = fk.CreateViewAsSkill{
     local names = {["dismantlement"] = 1, ["nullification"] = 3, ["ex_nihilo"] = 3}
     handleMoulue(player.room, player, - names[use.card.trueName])
   end,
+  enabled_at_play = function(self, player)
+    return player:usedSkillTimes(self.name) == 0
+  end,
   enabled_at_response = function(self, player, response)
-    if response then return false end
+    if response or player:usedSkillTimes(self.name) > 0 then return false end
     local all_names = {["dismantlement"] = 1, ["nullification"] = 3, ["ex_nihilo"] = 3}
     for name, v in pairs(all_names) do
       if Self:getMark("@mini_moulue") >= v then
