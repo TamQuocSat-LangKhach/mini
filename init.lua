@@ -1583,7 +1583,7 @@ local huhou_dmg = fk.CreateTriggerSkill{
   events = {fk.DamageCaused},
   mute = true,
   can_trigger = function (self, event, target, player, data)
-    return target == player and data.card and data.card.trueName == "duel" and table.contains(data.card.skillNames, "mini_huhou")
+    return target == player and data.card and data.card.trueName == "duel" and (player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard).data[1].extra_data or {}).miniHuhou
   end,
   on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
@@ -1595,7 +1595,12 @@ local huhou_dmg = fk.CreateTriggerSkill{
     return target == player and table.contains(data.card.skillNames, huhou.name) and data.responseToEvent and data.responseToEvent.card.trueName == "duel"
   end,
   on_refresh = function (self, event, target, player, data)
-    data.responseToEvent.card.skillName = "mini_huhou"
+    local room = player.room
+    local useEvent = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+    if useEvent and useEvent.data[1].card.trueName == "duel" then
+      useEvent.data[1].extra_data = useEvent.data[1].extra_data or {}
+      useEvent.data[1].extra_data.miniHuhou = true
+    end
   end
 }
 huhou:addRelatedSkill(huhou_dmg)
