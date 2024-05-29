@@ -1434,7 +1434,7 @@ local lvyuan_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.AfterCardsMove},
   can_trigger = function (self, event, target, player, data)
-    if player:getMark("@mini_lvyuan") == 0 then return false end
+    if player:getMark("@mini_lvyuan") == 0 or player.dead then return false end
     local num = 0
     for _, move in ipairs(data) do
       if move.from == player.id and (move.to ~= move.from or not table.contains({Card.PlayerEquip, Card.PlayerHand}, move.toArea)) then
