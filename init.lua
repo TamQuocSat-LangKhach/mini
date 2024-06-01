@@ -636,18 +636,21 @@ local sangu = fk.CreateTriggerSkill{
   anim_type = "special",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player:getMark("@mini_sangu") // 3 == 1 and player:getMark("@mini_moulue") < 5
+    return target == player and player:hasSkill(self) and
+    player:getMark("@mini_sangu") > 0 and player:getMark("@mini_sangu") % 3 == 0
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "@mini_sangu", 0)
-    handleMoulue(player.room, player, 3)
+    if player:getMark("@mini_moulue") < 5 then
+      handleMoulue(room, player, 3)
+    end
     room:askForGuanxing(player, room:getNCards(3), nil, nil, self.name)
   end,
 
   refresh_events = {fk.TargetConfirmed},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) 
+    return target == player and player:hasSkill(self)
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "@mini_sangu", 1)
