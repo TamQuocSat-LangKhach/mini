@@ -1333,7 +1333,7 @@ local mengshou = fk.CreateTriggerSkill{
   events = {fk.DamageInflicted},
   anim_type = "defensive",
   can_trigger = function (self, event, target, player, data)
-    if not (target == player and player:hasSkill(self) and data.from and data.from ~= player and player:usedSkillTimes(self.name) == 0) then return end
+    if not (target == player and player:hasSkill(self) and data.from and data.from ~= player and player:usedSkillTimes(self.name, Player.HistoryRound) == 0) then return end
     local x, y = 0, 0
     player.room.logic:getActualDamageEvents(1, function(e)
       local damage = e.data[1]
@@ -1370,7 +1370,7 @@ Fk:loadTranslationTable{
   [":mini_zunbei"] = "出牌阶段限一次，你可与所有其他角色进行一次“逐鹿”，然后若此次“逐鹿”：有胜者，则胜者视为使用一张【万箭齐发】，此牌结算结束后，你摸X张牌（X为受到此牌伤害的角色数）；没有胜者，则此技能视为此阶段未发动过。" ..
   "<br/><font color='grey'>#\"<b>逐鹿</b>\"即“共同拼点”，所有角色一起拼点比大小。",
   ["mini_mengshou"] = "盟首",
-  [":mini_mengshou"] = "每回合限一次，当你受到其他角色造成的伤害时，若其本轮造成的伤害值不大于你，你可防止此伤害。",
+  [":mini_mengshou"] = "每轮限一次，当你受到其他角色造成的伤害时，若其本轮造成的伤害值不大于你，你可防止此伤害。",
 
   ["#mini_zunbei"] = "尊北：你可与所有其他角色共同拼点，<br/>若有胜者，则胜者视为使用一张【万箭齐发】，此牌结算结束后，你摸X张牌（X为受到此牌伤害的角色数）；<br/>没有胜者，则此技能视为此阶段未发动过",
   ["#mini_mengshou-ask"] = "盟首：你可防止 %dest 造成的 %arg 点 %arg2 伤害",
