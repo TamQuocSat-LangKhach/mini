@@ -1389,39 +1389,19 @@ local lvyuan = fk.CreateTriggerSkill{
   anim_type = "drawcard",
   events = {fk.EventPhaseStart},
   can_trigger = function (self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Finish and not player:isKongcheng()
-  end,
-  on_cost = function (self, event, target, player, data)
-    local cards = player:getCardIds(Player.Hand)
-    local colors = {}
-    for _, id in ipairs(cards) do
-      if Fk:getCardById(id).color ~= Card.NoColor and #colors < 2 then
-        table.insertIfNeed(colors, Fk:getCardById(id):getColorString())
-      end
-    end
-    if #colors == 0 then return end
-    table.insert(colors, "Cancel")
-    local color = player.room:askForChoice(player, colors, self.name, "#mini_lvyuan-ask", false, {"black", "red", "Cancel"})
-    if color ~= "Cancel" then
-      self.cost_data = color
-      return true
-    end
+    return target == player and player:hasSkill(self) and player.phase == Player.Finish and not player:isNude()
   end,
   on_use = function (self, event, target, player, data)
-    local color = self.cost_data
-    local cards = player:getCardIds(Player.Hand)
-    local throw = {}
-    for _, id in ipairs(cards) do
-      if Fk:getCardById(id):getColorString() == color and not player:prohibitDiscard(Fk:getCardById(id)) then
-        table.insert(throw, id)
-      end
-    end
-    if #throw == 0 then return end
     local room = player.room
-    room:throwCard(throw, self.name, player, player)
+    local throw = room:askForDiscard(player, 1, #player:getCardIds("he"), true, self.name, false, nil, "#mini_lvyuan-discard")
     if player.dead then return end
     player:drawCards(#throw, self.name)
-    room:setPlayerMark(player, "@mini_lvyuan", color == "black" and "red" or "black")
+    if #throw == 1 then return end
+    local color = Fk:getCardById(throw[1]).color
+    if color == Card.NoColor then return end
+    if table.every(throw, function(id) return Fk:getCardById(id).color == color end) then
+      room:setPlayerMark(player, "@mini_lvyuan", color == Card.Black and "red" or "black")
+    end
   end,
 
   refresh_events = {fk.TurnStart},
@@ -1470,17 +1450,24 @@ local hezong = fk.CreateTriggerSkill{
     return player:hasSkill(self)
   end,
   on_cost = function (self, event, target, player, data)
-    local target = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, 1, "#mini_hezong-ask", self.name, true)
-    if #target > 0 then
-      self.cost_data = target[1]
+    local targets = player.room:askForChoosePlayers(player, table.map(player.room.alive_players, Util.IdMapper), 2, 2, "#mini_hezong-ask", self.name, true)
+    if #targets > 0 then
+      self.cost_data = targets
       return true
     end
   end,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(self.cost_data)
-    room:setPlayerMark(player, "@mini_hezong-round", to.general)
-    room:setPlayerMark(player, "_mini_hezong-round", to.id)
+    local targets = self.cost_data
+    for i, pid in ipairs(targets) do
+      local p = room:getPlayerById(pid)
+      local record = U.getMark(p, "@mini_hezong-round")
+      table.insertIfNeed(record, room:getPlayerById(targets[3-i]).general)
+      room:setPlayerMark(p, "@mini_hezong-round", record)
+      record = U.getMark(p, "_mini_hezong-round")
+      table.insertIfNeed(record, targets[3-i])
+      room:setPlayerMark(p, "_mini_hezong-round", targets[3-i])
+    end
   end
 }
 local hezong_delay = fk.CreateTriggerSkill{
@@ -1488,8 +1475,7 @@ local hezong_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.CardUseFinished, fk.TargetConfirming},
   can_trigger = function (self, event, target, player, data)
-    if player:getMark("_mini_hezong-round") == 0 or data.card.trueName ~= "slash" or
-      (target ~= player and target.id ~= player:getMark("_mini_hezong-round")) then return false end
+    if data.card.trueName ~= "slash" or target.id ~= player:getMark("_mini_hezong-round") then return false end
     if event == fk.CardUseFinished then
       local tos = TargetGroup:getRealTargets(data.tos)
       if #tos == 0 or tos[1] == player.id or tos[1] == player:getMark("_mini_hezong-round") then return end
@@ -1511,12 +1497,13 @@ local hezong_delay = fk.CreateTriggerSkill{
     local responser = target == player and room:getPlayerById(player:getMark("_mini_hezong-round")) or player
     if event == fk.CardUseFinished then
       local to = self.cost_data
-      local use = room:askForUseCard(responser, "slash", "slash", "#mini_hezong-use::" .. to, true, {include_targets = {to}, bypass_times = true, bypass_distances = true })
+      local use = room:askForUseCard(responser, "slash", "slash", "#mini_hezong-use:" .. target.id .. ":" .. to, true, {include_targets = {to}, bypass_times = true, bypass_distances = true })
       if use then
         use.extraUse = true
         room:useCard(use)
-      else
-        room:askForDiscard(responser, 1, 1, true, self.name, false, nil)
+      elseif not responser:isNude() then
+        local card = room:askForCard(responser, 1, 1, true, self.name, false, nil, "#mini_hezong-give_slash::" .. target.id)
+        room:moveCardTo(card, Card.PlayerHand, target, fk.ReasonGive, self.name, nil, true, player.id)
       end
     else
       local card = room:askForCard(responser, 1, 1, true, self.name, true, "jink", "#mini_hezong-give::" .. target.id)
@@ -1536,19 +1523,20 @@ lusu:addSkill(hezong)
 Fk:loadTranslationTable{
   ["miniex__lusu"] = "极鲁肃",
   ["mini_lvyuan"] = "虑远",
-  [":mini_lvyuan"] = "结束阶段，你可以弃置一种颜色的所有手牌并摸等量的牌，然后直到你的下回合开始时，当你失去另一种颜色的一张手牌后，你摸一张牌。",
+  [":mini_lvyuan"] = "结束阶段，你可以弃置任意张牌并摸等量的牌，然后若你以此法弃置了至少两张牌且颜色相同，直到你的下回合开始时，当你失去另一种颜色的一张手牌后，你摸一张牌。",
   ["mini_hezong"] = "合纵",
-  [":mini_hezong"] = "每轮开始时，你可以选择一名其他角色，本轮内：" ..
-    "当你与其之中的一名角色使用【杀】指定除你与其外的角色为唯一目标结算后，另一名角色须对相同目标使用一张【杀】，否则弃置一张牌；" ..
-    "当你与其之中的一名角色成为除你与其外的角色使用【杀】的唯一目标时，另一名角色须交给目标角色一张【闪】，否则成为此【杀】的额外目标。",
+  [":mini_hezong"] = "每轮开始时，你可以选择两名角色，本轮内：" ..
+    "当其中一名角色使用【杀】指定除这些角色以外的角色为唯一目标结算后，另一名角色须对相同目标使用一张【杀】，否则交给其一张牌；" ..
+    "当其中一名角色成为除这些角色以外的角色使用【杀】的唯一目标时，另一名角色须交给目标角色一张【闪】，否则成为此【杀】的额外目标。",
 
-  ["#mini_lvyuan-ask"] = "是否发动 虑远，弃置一种颜色的所有手牌并摸等量的牌",
   ["@mini_lvyuan"] = "虑远",
+  ["#mini_lvyuan-discard"] = "虑远：弃置任意张牌并摸等量的牌",
   ["#mini_lvyuan_delay"] = "虑远",
-  ["#mini_hezong-ask"] = "是否发动 合纵，选择一名其他角色",
+  ["#mini_hezong-ask"] = "是否发动 合纵，选择两名角色",
   ["@mini_hezong-round"] = "合纵",
   ["#mini_hezong_delay"] = "合纵",
-  ["#mini_hezong-use"] = "合纵：你需对 %dest 使用一张【杀】，否则弃置一张牌",
+  ["#mini_hezong-use"] = "合纵：你需对 %dest 使用一张【杀】，否则交给 %src 一张牌",
+  ["#mini_hezong-give_slash"] = "合纵：交给 %dest 一张牌",
   ["#mini_hezong-give"] = "合纵：你需交给 %dest 一张【闪】，否则成为此【杀】的额外目标",
 
   ["$mini_lvyuan1"] = "天下风云多变，皆在肃胸腹之中。",
