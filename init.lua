@@ -668,7 +668,8 @@ local yanshi = fk.CreateActiveSkill{
     return Self:usedSkillTimes(self.name, Player.HistoryPhase) > 0 and 1 or 0
   end,
   card_filter = function(self, to_select, selected_cards)
-    return #selected_cards < (Self:usedSkillTimes(self.name, Player.HistoryPhase) > 0 and 1 or 0) and not Self:prohibitDiscard(Fk:getCardById(to_select))
+    return #selected_cards < (Self:usedSkillTimes(self.name, Player.HistoryPhase) > 0 and 1 or 0)
+    and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   interaction = function(self)
     local all_choices = {"Top", "Bottom"}
@@ -692,43 +693,23 @@ local yanshi = fk.CreateActiveSkill{
     room:setPlayerMark(player, "_mini_yanshi_record-phase", choice)
     if #effect.cards > 0 then
       room:throwCard(effect.cards, self.name, player, player)
+      if player.dead then return end
     end
-    local id = player:drawCards(1, self.name, choice == "Bottom" and "bottom" or "top")[1]
-    if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == player then
-      room:setCardMark(Fk:getCardById(id), "@@mini_yanshi-phase", 1)
-    end
+    player:drawCards(1, self.name, choice == "Bottom" and "bottom" or "top", "@@mini_yanshi-inhand-phase")
   end,
 }
 local yanshi_delay = fk.CreateTriggerSkill{
   name = "#mini_yanshi_delay",
-  refresh_events = {fk.CardUsing, fk.AfterCardsMove},
+  refresh_events = {fk.PreCardUse},
   can_refresh = function(self, event, target, player, data)
-    return event == fk.AfterCardsMove or (player == target and player:hasSkill(yanshi))
+    return target == player and table.find(Card:getIdList(data.card), function(id)
+      return Fk:getCardById(id):getMark("@@mini_yanshi-inhand-phase") > 0
+    end)
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.CardUsing then
-      local num = #table.filter(Card:getIdList(data.card), function(id)
-        return Fk:getCardById(id):getMark("@@mini_yanshi-phase") > 0
-      end)
-      if num > 0 then
-        room:notifySkillInvoked(player, "mini_yanshi", "special")
-        table.forEach(Card:getIdList(data.card), function(id)
-          return room:setCardMark(Fk:getCardById(id), "@@mini_yanshi-phase", 0)
-        end)
-        room:addPlayerMark(player, "_mini_yanshi-phase")
-      end
-    else
-      for _, move in ipairs(data) do
-        if move.from == player.id and move.moveReason ~= fk.ReasonUse then
-          for _, info in ipairs(move.moveInfo) do
-            if info.fromArea == Card.PlayerHand then
-              room:setCardMark(Fk:getCardById(info.cardId), "@@mini_yanshi-phase", 0)
-            end
-          end
-        end
-      end
-    end
+    room:notifySkillInvoked(player, "mini_yanshi", "special")
+    room:addPlayerMark(player, "_mini_yanshi-phase")
   end,
 }
 yanshi:addRelatedSkill(yanshi_delay)
@@ -743,10 +724,10 @@ Fk:loadTranslationTable{
   [":mini_sangu"] = "锁定技，每当有三张牌指定你为目标后，你获得3点“谋略值”，然后你观看牌堆顶的三张牌并将这些牌置于牌堆顶或牌堆底。"..
   "<br><font color='grey'>#\"<b>谋略值</b>\"：谋略值上限为5，有谋略值的角色拥有〖妙计〗。</font>",
   ["mini_yanshi"] = "演势",
-  [":mini_yanshi"] = "出牌阶段限一次，你可从牌堆顶或牌堆底（不可与你此阶段上一次选择的相同）摸一张牌。若你于此阶段使用了此牌，你可弃置一张手牌再次发动〖演势〗。",
+  [":mini_yanshi"] = "出牌阶段限一次，你可从牌堆顶或牌堆底（不可与你此阶段上一次选择的相同）摸一张牌。若你于此阶段使用了此牌，你可弃置一张牌再次发动〖演势〗。",
 
   ["@mini_sangu"] = "三顾",
-  ["@@mini_yanshi-phase"] = "演势",
+  ["@@mini_yanshi-inhand-phase"] = "演势",
   ["#mini_yanshi_choose"] = "演势：选择从牌堆顶或牌堆底摸一张牌",
   ["#mini_yanshi_only"] = "演势：从%arg摸一张牌",
 
