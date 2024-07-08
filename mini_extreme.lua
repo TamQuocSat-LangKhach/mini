@@ -1107,21 +1107,6 @@ local yinren = fk.CreateTriggerSkill{
   end,
 }
 
-local mini_duoquan_viewas = fk.CreateViewAsSkill{
-  name = "mini_duoquan_viewas",
-  card_filter = function(self, to_select, selected)
-    if #selected == 0 then
-      local ids = Self:getMark("mini_duoquan_cards")
-      return type(ids) == "table" and table.contains(ids, to_select)
-    end
-  end,
-  view_as = function(self, cards)
-    if #cards == 1 then
-      return Fk:getCardById(cards[1])
-    end
-  end,
-}
-Fk:addSkill(mini_duoquan_viewas)
 local duoquan = fk.CreateTriggerSkill{
   name = "mini_duoquan",
   anim_type = "control",
@@ -1132,9 +1117,9 @@ local duoquan = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
-    local target = room:askForChoosePlayers(player, targets, 1, 1, "#mini_duoquan", self.name, true, true)
-    if #target > 0 then
-      self.cost_data = target[1]
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#mini_duoquan", self.name, true, true)
+    if #tos > 0 then
+      self.cost_data = tos[1]
       return true
     end
   end,
@@ -1151,10 +1136,10 @@ local duoquan_delay = fk.CreateTriggerSkill{
   name = "#mini_duoquan_delay",
   events = {fk.CardUsing},
   anim_type = "control",
-  frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return target:getMark("_mini_duoquan") ~= 0 and target:getMark("_mini_duoquan")[tostring(player.id)] == data.card:getTypeString()
   end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = target.room
     room:doIndicate(player.id, {target.id})
@@ -1167,46 +1152,16 @@ local duoquan_delay = fk.CreateTriggerSkill{
     else
       data.tos = {}
     end
-    room:setPlayerMark(player, "mini_duoquan_cards", Card:getIdList(data.card))
     room.logic:getCurrentEvent():addCleaner(function(s)
-      local ids = player:getMark("mini_duoquan_cards")
-      for _, id in ipairs(ids) do
-        if room:getCardArea(id) ~= Card.Processing then
-          return false
-        end
-      end
-      room:delay(800)
-      local move_to_notify = {}   ---@type CardsMoveStruct
-      move_to_notify.toArea = Card.PlayerHand
-      move_to_notify.to = player.id
-      move_to_notify.moveInfo = {}
-      move_to_notify.moveReason = fk.ReasonJustMove
-      for _, id in ipairs(ids) do
-        table.insert(move_to_notify.moveInfo,
-        { cardId = id, fromArea = Card.Void })
-      end
-      room:notifyMoveCards({player}, {move_to_notify})
-      room:setPlayerMark(player, "mini_duoquan_cards", ids)
-      local success, dat = room:askForUseActiveSkill(player, "mini_duoquan_viewas", "#mini_duoquan-invoke", true, Util.DummyTable, true)
-      room:setPlayerMark(player, "mini_duoquan_cards", 0)
-      move_to_notify = {}   ---@type CardsMoveStruct
-      move_to_notify.from = player.id
-      move_to_notify.toArea = Card.Void
-      move_to_notify.moveInfo = {}
-      move_to_notify.moveReason = fk.ReasonJustMove
-      for _, id in ipairs(ids) do
-        table.insert(move_to_notify.moveInfo,
-        { cardId = id, fromArea = Card.PlayerHand})
-      end
-      room:notifyMoveCards({player}, {move_to_notify})
-      if success then
-        local card = Fk.skills["mini_duoquan_viewas"]:viewAs(dat.cards)
-        player.room:useCard{
-          from = player.id,
-          tos = table.map(dat.targets, function(id) return {id} end),
-          card = card,
-        }
-      end
+      if player.dead then return end
+      local e = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+      if not e then return end
+      local use = e.data[1]
+      local ids = table.filter(Card:getIdList(use.card), function (id)
+        return room:getCardArea(id) == Card.Processing
+      end)
+      if #ids == 0 then return end
+      U.askForUseRealCard(room, player, ids, ".", "mini_duoquan", "#mini_duoquan-use", {expand_pile = ids})
     end)
   end,
 
@@ -1241,9 +1196,8 @@ Fk:loadTranslationTable{
   [":mini_duoquan"] = "结束阶段，你可观看一名其他角色的手牌，秘密选择一种类型，当其使用下一张牌时，若此牌的类型与你选择的类型相同，则你令取消之，然后当此牌结算完毕后，你可使用此牌对应的一张实体牌。",
 
   ["#mini_duoquan"] = "夺权：你可选择一名其他角色，观看其手牌并秘密选择一种类型",
-  ["#mini_duoquan-invoke"] = "是否使用夺权，使用其中的牌",
+  ["#mini_duoquan-use"] = "夺权：你可以使用其中的一张牌",
   ["#mini_duoquan_delay"] = "夺权",
-  ["mini_duoquan_viewas"] = "夺权",
   ["#mini_duoquan-ask"] = "夺权：观看%dest的手牌，选择一种类型",
 
   ["$mini_yinren1"] = "小隐于野，大隐于朝。",
