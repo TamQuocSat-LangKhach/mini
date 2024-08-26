@@ -1652,4 +1652,193 @@ Fk:loadTranslationTable{
   ["~miniex__xuchu"] = "丞相，丞相！呃啊……",
 }
 
+local miniex__xunyu = General(extension, "miniex__xunyu", "wei", 3)
+local wangzuo = fk.CreateTriggerSkill {
+  name = "mini_wangzuo",
+  events = {fk.EventPhaseChanging},
+  can_trigger = function (self, event, target, player, data)
+    return player == target and player:hasSkill(self) and data.to > Player.Judge and data.to < Player.Finish and player:usedSkillTimes(self.name) == 0
+  end,
+  on_cost = function (self, event, target, player, data)
+    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player, false), Util.IdMapper),
+      1, 1, "#mini_wangzuo-ask:::" .. U.ConvertPhse(data.to), self.name, true)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    player.room:getPlayerById(self.cost_data):gainAnExtraPhase(data.to)
+    return true
+  end,
+}
+
+local juxian = fk.CreateTriggerSkill{
+  name = "mini_juxian",
+  events = {fk.AfterCardsMove},
+  anim_type = "drawcard",
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) or player.room.current ~= player then return false end
+    local room = player.room
+    local to_get = {}
+    local move_event = room.logic:getCurrentEvent()
+    local parent_event = move_event.parent
+    if parent_event and (parent_event.event == GameEvent.UseCard or parent_event.event == GameEvent.RespondCard) then
+      local parent_data = parent_event.data[1]
+      if parent_data.from ~= player.id then
+        local card_ids = room:getSubcardsByRule(parent_data.card)
+        for _, move in ipairs(data) do
+          if move.toArea == Card.DiscardPile then
+            for _, info in ipairs(move.moveInfo) do
+              local id = info.cardId
+              if info.fromArea == Card.Processing and room:getCardArea(id) == Card.DiscardPile and
+              table.contains(card_ids, id) then
+                table.insertIfNeed(to_get, id)
+              end
+            end
+          end
+        end
+      end
+    else
+      for _, move in ipairs(data) do
+        if move.toArea == Card.DiscardPile then
+          local from = move.from
+          if from and from ~= player.id and move.moveReason == fk.ReasonDiscard then
+            for _, info in ipairs(move.moveInfo) do
+              if (info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip) and room:getCardArea(info.cardId) == Card.DiscardPile then
+                table.insertIfNeed(to_get, info.cardId)
+              end
+            end
+          end
+        end
+      end
+    end
+    if #to_get > 0 then
+      self.cost_data = to_get
+      return true
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local cards = self.cost_data
+    player.room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
+  end,
+}
+
+local xianshi = fk.CreateTriggerSkill{
+  name = "mini_xianshi",
+  events = {fk.EventPhaseStart},
+  anim_type = "control",
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target.phase == Player.Draw
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local cids = room:askForArrangeCards(player, self.name,
+    {room:getNCards(3), player:getCardIds(Player.Hand), "pile_draw", "$Hand"}, "#mini_xianshi-exchange", true)
+    U.swapCardsWithPile(player, cids[1], cids[2], self.name, "Top")
+  end,
+}
+
+miniex__xunyu:addSkill(wangzuo)
+miniex__xunyu:addSkill(juxian)
+miniex__xunyu:addSkill(xianshi)
+
+Fk:loadTranslationTable{
+  ["miniex__xunyu"] = "极荀彧",
+  ["mini_wangzuo"] = "王佐",
+  [":mini_wangzuo"] = "每回合限一次，你可跳过摸牌阶段、出牌阶段或弃牌阶段，然后令一名其他角色执行一个对应的额外阶段。<br><font color='grey'>不要报告和此技能有关的，如与阶段、回合有关的bug。",
+  ["mini_juxian"] = "举贤",
+  [":mini_juxian"] = "你的回合内，当其他角色的牌因使用、打出或弃置而进入弃牌堆后，你获得之。",
+  ["mini_xianshi"] = "先识",
+  [":mini_xianshi"] = "一名角色的摸牌阶段开始时，你可观看牌堆顶的三张牌并用任意张手牌交换其中等量张牌。",
+
+  ["#mini_wangzuo-ask"] = "你可以发动〖王佐〗，跳过 %arg，选择一名其他角色，令其执行 %arg",
+  ["#mini_xianshi-exchange"] = "先识：观看牌堆顶的三张牌并用任意张手牌交换",
+}
+
+local miniex__zhenji = General(extension, "miniex__zhenji", "wei", 3, 3, General.Female)
+local shenfu = fk.CreateTriggerSkill{
+  name = "mini_shenfu",
+  events = {fk.Damaged, fk.EventPhaseStart},
+  can_trigger = function (self, event, target, player, data)
+    return player:hasSkill(self) and (event == fk.Damaged or (target == player and player.phase == Player.Start and player:getMark("@mini_shenfu_luoshen") > 0))
+  end,
+  on_cost = function (self, event, target, player, data)
+    if event == fk.Damaged then
+      return true
+    else
+      return player.room:askForSkillInvoke(player, self.name, data, "#mini_shenfu-invoke:::" .. player:getMark("@mini_shenfu_luoshen"))
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    if event == fk.Damaged then
+      room:addPlayerMark(player, "@mini_shenfu_luoshen", data.damage)
+    else
+      local num = player:getMark("@mini_shenfu_luoshen")
+      room:setPlayerMark(player, "@mini_shenfu_luoshen", 0)
+      local cards = room:getNCards(num)
+      room:moveCards{
+        ids = cards,
+        toArea = Card.Processing,
+        moveReason = fk.ReasonJustMove,
+        skillName = self.name,
+        proposer = player.id,
+      }
+      for _, id in ipairs(cards) do
+        local card = Fk:getCardById(id)
+        if card.color == Card.Black and room:getCardArea(id) == Card.Processing and U.canUseCard(room, player, card) then
+          local use = U.askForUseRealCard(room, player, {id}, ".", self.name, "#mini_shenfu-use:::" .. card:toLogString(), {expand_pile = {id}, extra_use = true}, true)
+          if use then
+            room:useCard(use)
+          end
+        end
+      end
+      U.clearRemainCards(room, cards, self.name)
+    end
+  end
+}
+local siyuan = fk.CreateTriggerSkill{
+  name = "mini_siyuan",
+  events = {fk.Damaged},
+  anim_type = "masochism",
+  can_trigger = function (self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.from
+  end,
+  on_cost = function (self, event, target, player, data)
+    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player, false), Util.IdMapper),
+      1, 1, "#mini_siyuan-invoke:" .. data.from.id, self.name, true)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    room:damage{
+      from = data.from,
+      to = to,
+      damage = 1,
+      skillName = self.name,
+      isVirtualDMG = true,
+    }
+  end
+}
+miniex__zhenji:addSkill(shenfu)
+miniex__zhenji:addSkill(siyuan)
+Fk:loadTranslationTable{
+  ["miniex__zhenji"] = "极甄姬",
+  ["mini_shenfu"] = "神赋",
+  [":mini_shenfu"] = "①当一名角色受到伤害后，你获得X枚“洛神”（X为伤害值）。②准备阶段，你可弃所有“洛神”，亮出牌堆顶等量张牌，然后可依次使用其中的黑色牌。",
+  ["mini_siyuan"] = "思怨",
+  [":mini_siyuan"] = "当你受到伤害后，你可选择一名其他角色，令伤害来源视为对其造成过1点伤害。",
+
+  ["@mini_shenfu_luoshen"] = "洛神",
+  ["#mini_shenfu-invoke"] = "你可以发动〖神赋〗，弃所有“洛神”，亮出牌堆顶 %arg 张牌，然后可依次使用其中的黑色牌",
+  ["#mini_shenfu-use"] = "神赋：你可以使用 %arg",
+  ["#mini_siyuan-invoke"] = "你可以发动〖思怨〗，选择一名其他角色，令 %src 视为对其造成过1点伤害",
+}
+
 return extension
