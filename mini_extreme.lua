@@ -1841,4 +1841,164 @@ Fk:loadTranslationTable{
   ["#mini_siyuan-invoke"] = "你可以发动〖思怨〗，选择一名其他角色，令 %src 视为对其造成过1点伤害",
 }
 
+local miniex__sunce = General(extension, "miniex__sunce", "wu", 4)
+local taoni = fk.CreateTriggerSkill{
+  name = "mini_taoni",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function (self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and player.hp > 0
+  end,
+  on_cost = function (self, event, target, player, data)
+    local choices = {}
+    for i = 1, player.hp do
+      table.insert(choices, tostring(i))
+    end
+    table.insert(choices, "Cancel")
+    local choice = player.room:askForChoice(player, choices, self.name, "#mini_taoni-invoke")
+    if choice ~= "Cancel" then
+      self.cost_data = choice
+      return true
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    local num = tonumber(self.cost_data) ---@type integer
+    local room = player.room
+    room:loseHp(player, num, self.name)
+    if player.dead then return end
+    room:drawCards(player, num, self.name)
+    if player.dead then return end
+    local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p) return p:getMark("@@mini_taoni") == 0 end), Util.IdMapper)
+    if #targets > 0 then
+      local tos = room:askForChoosePlayers(player, targets, 1, num, "#mini_taoni-choose:::" .. num, self.name, false)
+      table.forEach(tos, function(pid) room:addPlayerMark(room:getPlayerById(pid), "@@mini_taoni", 1) end)
+    end
+    room:setPlayerMark(player, "_mini_taoni-turn", 1)
+  end
+}
+local taoni_maxcards = fk.CreateMaxCardsSkill{
+  name = "#mini_taoni_maxcards",
+  fixed_func = function(self, player)
+    if player:getMark("_mini_taoni-turn") ~= 0 then
+      return player.maxHp
+    end
+  end
+}
+taoni:addRelatedSkill(taoni_maxcards)
+
+local pingjiang = fk.CreateActiveSkill{
+  name = "mini_pingjiang",
+  anim_type = "offensive",
+  prompt = "#mini_pingjiang-active",
+  can_use = function (self, player, card, extra_data)
+    return U.canUseCard(Fk:currentRoom(), player, Fk:cloneCard("duel")) and player:getMark("@@mini_pingjiang_invalid-turn") == 0
+  end,
+  target_num = 1,
+  target_filter = function (self, to_select)
+    local target = Fk:currentRoom():getPlayerById(to_select)
+    if target:getMark("@@mini_taoni") > 0 then
+      local card = Fk:cloneCard("duel")
+      card.skillName = self.name
+      return U.canUseCardTo(Fk:currentRoom(), Self, target, card)
+    end
+  end,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  on_use = function (self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local use = room:useVirtualCard("duel", nil, player, target, self.name, true)
+    if use.damageDealt then
+      if use.damageDealt[target.id] then
+        room:setPlayerMark(target, "@@mini_taoni", 0)
+        room:addPlayerMark(player, "@mini_pingjiang-turn")
+      end
+      if use.damageDealt[player.id] then
+        room:setPlayerMark(player, "@@mini_pingjiang_invalid-turn", 1)
+        room:setPlayerMark(player, "@mini_pingjiang-turn", 0)
+      end
+    end
+  end,
+}
+local pingjiang_buff = fk.CreateTriggerSkill{
+  name = "#mini_pingjiang_buff",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified, fk.TargetConfirmed, fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    if player:getMark("@mini_pingjiang-turn") == 0 or not data.card or data.card.trueName ~= "duel" then return end
+    if event == fk.TargetSpecified then
+      return target == player
+    elseif event == fk.TargetConfirmed then
+      return data.to == player.id
+    else
+      return target == player and player.room.logic:damageByCardEffect()
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local num = player:getMark("@mini_pingjiang-turn")
+    if event ~= fk.DamageCaused then
+      data.fixedResponseTimes = data.fixedResponseTimes or {}
+      data.fixedResponseTimes["slash"] = (data.fixedResponseTimes["slash"] or 1) + 1
+      data.fixedAddTimesResponsors = data.fixedAddTimesResponsors or {}
+      table.insert(data.fixedAddTimesResponsors, (event == fk.TargetSpecified and data.to or data.from))
+    else
+      data.damage = data.damage + num
+    end
+  end,
+}
+pingjiang:addRelatedSkill(pingjiang_buff)
+
+local dingye = fk.CreateTriggerSkill{
+  name = "mini_dingye",
+  anim_type = "support",
+  events = {fk.EventPhaseStart},
+  can_trigger = function (self, event, target, player, data)
+    if not (target == player and player:hasSkill(self) and player.phase == Player.Finish and player:isWounded()) then return end
+    local targets = {}
+    player.room.logic:getActualDamageEvents(1, function(e)
+      local damage = e.data[1]
+      table.insertIfNeed(targets, damage.to.id)
+      return false
+    end)
+    if #targets > 0 then
+      self.cost_data = #targets
+      return true
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    local num = self.cost_data
+    player.room:recover{
+      from = player,
+      who = player,
+      num = num,
+      reason = self.name
+    }
+  end
+}
+
+miniex__sunce:addSkill(taoni)
+miniex__sunce:addSkill(pingjiang)
+miniex__sunce:addSkill(dingye)
+
+Fk:loadTranslationTable{
+  ["miniex__sunce"] = "极孙策",
+  ["mini_taoni"] = "讨逆",
+  [":mini_taoni"] = "出牌阶段开始时，你可失去任意点体力，摸X张牌，然后令至多X名没有“讨逆”的其他角色各获得1枚“讨逆”，然后此回合你的手牌上限为你的体力上限。（X为你以此法失去的体力值）",
+  ["mini_pingjiang"] = "平江",
+  [":mini_pingjiang"] = "出牌阶段，你可选择一名有“讨逆”的角色，视为对其使用【决斗】。若其受到了此【决斗】的伤害，" ..
+  "弃其“讨逆”，你此回合使用的【决斗】目标角色需要打出【杀】的数量+1，对目标角色造成的伤害+1；若你受到了此【决斗】的伤害，此技能此回合失效。",
+  ["mini_dingye"] = "鼎业",
+  [":mini_dingye"] = "结束阶段，你回复X点体力。（X为此回合受到过伤害的角色数）",
+
+  ["#mini_taoni-invoke"] = "你可以发动〖讨逆〗，失去任意点体力，摸等量张牌，然后令至多等量名角色获得“讨逆”",
+  ["#mini_taoni-choose"] = "讨逆：选择至多%arg名角色获得“讨逆”",
+  ["@@mini_taoni"] = "讨逆",
+  ["#mini_pingjiang-active"] = "你可以发动〖平江〗，选择一名有“讨逆”的角色，视为对其使用【决斗】",
+  ["@mini_pingjiang-turn"] = "平江",
+  ["@@mini_pingjiang_invalid-turn"] = "平江失效",
+  ["#mini_pingjiang_buff"] = "平江",
+}
+
 return extension
