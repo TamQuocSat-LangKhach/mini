@@ -9,6 +9,18 @@ Fk:loadTranslationTable{
   ["miniex"] = "极",
 }
 
+---韵律技转韵
+---@param room Room
+---@param player ServerPlayer
+---@param skillName string
+---@param scope? integer
+local function changeRhyme(room, player, skillName, scope)
+  scope = scope or Player.HistoryPhase
+  room:setPlayerMark(player, MarkEnum.SwithSkillPreName .. skillName, player:getSwitchSkillState(skillName, true))
+  room:notifySkillInvoked(player, skillName, "switch")
+  player:setSkillUseHistory(skillName, 0, scope)
+end
+
 local lvbu = General(extension, "miniex__lvbu", "qun", 4)
 local mini_xiaohu = fk.CreateTriggerSkill{
   name = "mini_xiaohu",
@@ -74,9 +86,9 @@ local mini_xiangzhi = fk.CreateActiveSkill{
   target_num = 0,
   prompt = function(self)
     if Self:getSwitchSkillState("mini_xiangzhi", false) == fk.SwitchYang then
-      return "#mini_xiangzhi-ping"
+      return "#mini_xiangzhi-level"
     else
-      return "#mini_xiangzhi-ze"
+      return "#mini_xiangzhi-oblique"
     end
   end,
   can_use = function(self, player)
@@ -200,9 +212,7 @@ local mini_jielie = fk.CreateActiveSkill{
       room:setPlayerMark(target, "@@mini_xiangzhi", mark)
     end
     if not player.dead and player:hasSkill("mini_xiangzhi", true) then
-      room:setPlayerMark(player, MarkEnum.SwithSkillPreName .. "mini_xiangzhi", player:getSwitchSkillState("mini_xiangzhi", true))
-      room:notifySkillInvoked(player, "mini_xiangzhi", "switch")
-      player:setSkillUseHistory("mini_xiangzhi", 0, Player.HistoryPhase)
+      changeRhyme(room, player, "mini_xiangzhi")
     end
   end,
 }
@@ -218,8 +228,8 @@ Fk:loadTranslationTable{
   ["mini_jielie"] = "节烈",
   [":mini_jielie"] = "出牌阶段限一次，你可以选择一项，令一名其他角色：1.其可以使用一张手牌，若此牌为红色【杀】，则你失去1点体力，"..
   "然后你可以再次发动〖节烈〗；2.你下次发动〖相知〗时，令其获得相同效果。",
-  ["#mini_xiangzhi-ping"] = "相知：你可以摸一张牌",
-  ["#mini_xiangzhi-ze"] = "相知：你可以回复1点体力",
+  ["#mini_xiangzhi-level"] = "相知：你可以摸一张牌",
+  ["#mini_xiangzhi-oblique"] = "相知：你可以回复1点体力",
   ["#mini_jielie"] = "节烈：令一名其他角色执行一项",
   ["mini_jielie1"] = "使用一张手牌",
   ["mini_jielie2"] = "其下次获得“相知”效果",
@@ -247,9 +257,9 @@ local mini_tongxin = fk.CreateActiveSkill{
   target_num = 1,
   prompt = function(self)
     if Self:getSwitchSkillState("mini_tongxin", false) == fk.SwitchYang then
-      return "#mini_tongxin-ping"
+      return "#mini_tongxin-level"
     else
-      return "#mini_tongxin-ze"
+      return "#mini_tongxin-oblique"
     end
   end,
   can_use = function(self, player)
@@ -302,12 +312,9 @@ local mini_tongxin_record = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    local mark = player:getMark("mini_tongxin-turn")
-    if mark == 0 then mark = {} end
+    local mark = player:getTableMark("mini_tongxin-turn")
     if player.phase == Player.Play and not table.contains(mark, data.card:getTypeString()) then
-      room:setPlayerMark(player, MarkEnum.SwithSkillPreName .. "mini_tongxin", player:getSwitchSkillState("mini_tongxin", true))
-      room:notifySkillInvoked(player, "mini_tongxin", "switch")
-      player:setSkillUseHistory("mini_tongxin", 0, Player.HistoryPhase)
+      changeRhyme(room, player, "mini_tongxin")
     end
     table.insertIfNeed(mark, data.card:getTypeString())
     room:setPlayerMark(player, "mini_tongxin-turn", mark)
@@ -337,8 +344,8 @@ Fk:loadTranslationTable{
   "韵律技会转换到另一个状态，且重置技能发动次数。",
   ["mini_shaoyan"] = "韶颜",
   [":mini_shaoyan"] = "每回合限一次，当你成为其他角色使用牌的目标后，若其手牌数大于你，你摸一张牌。",
-  ["#mini_tongxin-ping"] = "同心：令一名角色交给你一张手牌，然后若其手牌数不大于你，其摸一张牌",
-  ["#mini_tongxin-ze"] = "同心：交给一名其他角色一张手牌，然后若其手牌数不小于你，你对其造成1点伤害",
+  ["#mini_tongxin-level"] = "同心：令一名角色交给你一张手牌，然后若其手牌数不大于你，其摸一张牌",
+  ["#mini_tongxin-oblique"] = "同心：交给一名其他角色一张手牌，然后若其手牌数不小于你，你对其造成1点伤害",
   ["#mini_tongxin-give"] = "同心：你需交给 %src 一张手牌",
 
   ["$mini_tongxin1"] = "嘘~心悦何须盟誓，二人同心足矣。",
@@ -1795,7 +1802,7 @@ local shenfu = fk.CreateTriggerSkill{
           end
         end
       end
-      U.clearRemainCards(room, cards, self.name)
+      room:cleanProcessingArea(cards, self.name)
     end
   end
 }
@@ -1999,6 +2006,130 @@ Fk:loadTranslationTable{
   ["@mini_pingjiang-turn"] = "平江",
   ["@@mini_pingjiang_invalid-turn"] = "平江失效",
   ["#mini_pingjiang_buff"] = "平江",
+}
+local miniex__caiwenji = General(extension, "miniex__caiwenji", "qun", 3, 3, General.Female)
+local mini_beijia = fk.CreateViewAsSkill{
+  name = "mini_beijia",
+  anim_type = "control",
+  card_num = 1,
+  prompt = function(self)
+    local number = Self:getMark("@mini_beijia")
+    if Self:getSwitchSkillState(self.name, false) == fk.SwitchYang then
+      return "#mini_beijia-level:::" .. number
+    else
+      return "#mini_beijia-oblique:::" .. number
+    end
+  end,
+  interaction = function()
+    local all_names = U.getAllCardNames(Self:getSwitchSkillState("mini_beijia", false) == fk.SwitchYang and "t" or "b")
+    local names = U.getViewAsCardNames(Self, "mini_beijia", all_names)
+    if #names > 0 then
+      return U.CardNameBox { choices = names, all_choices = all_names }
+    end
+  end,
+  enabled_at_play = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0
+  end,
+  enabled_at_response = function (self, player, response)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0 and not response
+  end,
+  card_filter = function(self, to_select, selected)
+    if #selected == 0 then
+      local number = Self:getMark("@mini_beijia")
+      if Self:getSwitchSkillState(self.name, false) == fk.SwitchYang then
+        return Fk:getCardById(to_select).number > number
+      else
+        return Fk:getCardById(to_select).number < number
+      end
+    end
+  end,
+  view_as = function (self, cards)
+    if #cards ~= 1 then
+      return nil
+    end
+    local c = Fk:cloneCard(self.interaction.data)
+    c.skillName = self.name
+    c:addSubcard(cards[1])
+    return c
+  end
+}
+local mini_beijia_record = fk.CreateTriggerSkill{
+  name = "#mini_beijia_record",
+  refresh_events = {fk.CardUsing, fk.EventAcquireSkill, fk.EventLoseSkill},
+  can_refresh = function(self, event, target, player, data)
+    if target ~= player then return end
+    if event == fk.CardUsing then return player:hasSkill("mini_beijia")
+    else return data.name == "mini_beijia" end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventAcquireSkill then
+      room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
+        local use = e.data[1]
+        if use and use.from == player.id then
+          room:setPlayerMark(player, "@mini_beijia", math.max(use.card.number, 0))
+          return true
+        end
+        return false
+      end, 1)
+    elseif event == fk.EventLoseSkill then
+      room:setPlayerMark(player, "@mini_beijia", 0)
+    else
+      local last_num = player:getMark("@mini_beijia")
+      if player.phase == Player.Play and last_num == data.card.number then
+        changeRhyme(room, player, "mini_beijia", Player.HistoryPhase)
+      end
+      room:setPlayerMark(player, "@mini_beijia", math.max(data.card.number, 0))
+    end
+  end,
+}
+mini_beijia:addRelatedSkill(mini_beijia_record)
+
+local mini_sifu = fk.CreateActiveSkill{
+  name = "mini_sifu",
+  prompt = "#mini_sifu-active",
+  anim_type = "drawcard",
+  target_num = 0,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  can_use = function (self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  on_use = function (self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local nums = {}
+    room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+      local use = e.data[1]
+      if use and use.from == player.id and use.card.number > 0 then
+        table.insertIfNeed(nums, use.card.number)
+      end
+      return false
+    end, Player.HistoryTurn)
+    local _nums = table.concat(nums, ",")
+    local cards = room:getCardsFromPileByRule(".|" .. _nums)
+    table.insertTable(cards, room:getCardsFromPileByRule(".|^(" .. _nums .. ")"))
+    if #cards > 0 then
+      room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
+    end
+  end
+}
+miniex__caiwenji:addSkill(mini_beijia)
+miniex__caiwenji:addSkill(mini_sifu)
+
+Fk:loadTranslationTable{
+  ["miniex__caiwenji"] = "极蔡文姬",
+  ["mini_beijia"] = "悲笳",
+  [":mini_beijia"] = "韵律技，每回合限一次，平：你可将一张点数大于X的牌当任意普通锦囊牌使用；仄：你可将一张点数小于X的牌当任意基本牌使用；" ..
+    "转韵：出牌阶段，使用一张点数等于X的牌（X为你使用的上一张牌的点数）。<br>" ..
+    "<font color='grey'>\"<b>韵律技</b>\"<br>一种特殊的技能，分为“平”和“仄”两种状态。游戏开始时，韵律技处于“平”状态；满足“转韵”条件后，"..
+    "韵律技会转换到另一个状态，且重置技能发动次数。",
+  ["mini_sifu"] = "思赋",
+  [":mini_sifu"] = "出牌阶段限一次，你可从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张。",
+
+  ["@mini_beijia"] = "悲笳",
+  ["#mini_beijia-level"] = "悲笳（平）：你可将一张点数大于%arg的牌当任意普通锦囊牌使用",
+  ["#mini_beijia-oblique"] = "悲笳（仄）：你可将一张点数小于%arg的牌当任意基本牌使用",
+  ["#mini_sifu-active"] = "发动 思赋，从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张",
 }
 
 return extension
