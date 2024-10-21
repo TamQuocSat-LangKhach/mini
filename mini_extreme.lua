@@ -756,7 +756,7 @@ local miaobi = fk.CreateTriggerSkill{
     if target ~= player then return false end
     if event == fk.CardUseFinished then
       if not (player:hasSkill(self) and player.phase == Player.Play
-      and data.card.type == Card.TypeTrick and U.isPureCard(data.card) and not table.contains(U.getMark(player, "_mini_miaobi_used-turn"), data.card.trueName)) then return false end
+      and data.card.type == Card.TypeTrick and U.isPureCard(data.card) and not table.contains(player:getTableMark("_mini_miaobi_used-turn"), data.card.trueName)) then return false end
       local room = player.room
       if room:getCardArea(data.card) ~= Card.Processing then return false end
       local targets = {}
@@ -797,13 +797,13 @@ local miaobi = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.CardUseFinished then
-      local record = U.getMark(player, "_mini_miaobi_used-turn")
+      local record = player:getTableMark("_mini_miaobi_used-turn")
       table.insert(record, data.card.trueName)
       room:setPlayerMark(player, "_mini_miaobi_used-turn", record)
       local to = room:getPlayerById(self.cost_data)
       to:addToPile("mini_miaobi_penmanship", data.card, true, self.name)
       if table.contains(to:getPile("mini_miaobi_penmanship"), data.card.id) then
-        record = U.getMark(to, "_mini_miaobi")
+        record = to:getTableMark("_mini_miaobi")
         record[tostring(player.id)] = record[tostring(player.id)] or {}
         table.insert(record[tostring(player.id)], data.card.id)
         room:setPlayerMark(to, "_mini_miaobi", record)
@@ -1134,7 +1134,7 @@ local duoquan = fk.CreateTriggerSkill{
     local room = player.room
     local target = room:getPlayerById(self.cost_data)
     local choice = U.askforViewCardsAndChoice(player, target:getCardIds("h"), {"basic", "trick", "equip"}, self.name, "#mini_duoquan-ask::" .. target.id)
-    local record = U.getMark(target, "_mini_duoquan")
+    local record = target:getTableMark("_mini_duoquan")
     record[tostring(player.id)] = choice
     room:setPlayerMark(target, "_mini_duoquan", record)
   end,
@@ -1404,10 +1404,10 @@ local hezong = fk.CreateTriggerSkill{
     local targets = self.cost_data
     for i, pid in ipairs(targets) do
       local p = room:getPlayerById(pid)
-      local record = U.getMark(p, "@mini_hezong-round")
+      local record = p:getTableMark("@mini_hezong-round")
       table.insertIfNeed(record, room:getPlayerById(targets[3-i]).general)
       room:setPlayerMark(p, "@mini_hezong-round", record)
-      record = U.getMark(p, "_mini_hezong-round")
+      record = p:getTableMark("_mini_hezong-round")
       table.insertIfNeed(record, targets[3-i])
       room:setPlayerMark(p, "_mini_hezong-round", targets[3-i])
     end
@@ -1579,7 +1579,7 @@ local wuwei = fk.CreateTriggerSkill{
     local to = self.cost_data
     room:setPlayerMark(player, "_mini_wuwei", to)
     target = room:getPlayerById(to)
-    local records = U.getMark(target, "@mini_wuwei")
+    local records = target:getTableMark("@mini_wuwei")
     table.insertIfNeed(records, player.general)
     room:setPlayerMark(target, "@mini_wuwei", records)
   end
@@ -1631,7 +1631,7 @@ local wuwei_delay = fk.CreateTriggerSkill {
   on_refresh = function (self, event, target, player, data)
     local room = player.room
     target = room:getPlayerById(player:getMark("_mini_wuwei"))
-    local records = U.getMark(target, "@mini_wuwei")
+    local records = target:getTableMark("@mini_wuwei")
     table.removeOne(records, player.general)
     room:setPlayerMark(target, "@mini_wuwei", #records > 0 and records or 0)
     player.room:setPlayerMark(player, "_mini_wuwei", 0)
