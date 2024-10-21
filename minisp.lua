@@ -11,6 +11,7 @@ local liuling = General(extension, "liuling", "qun", 3)
 local jiusong = fk.CreateViewAsSkill{
   name = "jiusong",
   pattern = "analeptic",
+  prompt = "#jiusong",
   card_filter = function(self, to_select, selected)
     if #selected == 1 then return false end
     return Fk:getCardById(to_select).type == Card.TypeTrick
@@ -28,12 +29,21 @@ local jiusong = fk.CreateViewAsSkill{
 local jiusong_trig = fk.CreateTriggerSkill{
   name = "#jiusong_trig",
   events = {fk.CardUsing},
+  main_skill = jiusong,
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self) and data.card.name == "analeptic" and player:getMark("@liuling_drunk") < 3
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "@liuling_drunk")
+  end,
+
+  refresh_events = {fk.EventLoseSkill},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and data == jiusong and player:getMark("@liuling_drunk") > 0
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room:setPlayerMark(player, "@liuling_drunk", 0)
   end,
 }
 jiusong:addRelatedSkill(jiusong_trig)
@@ -99,6 +109,7 @@ Fk:loadTranslationTable{
 
   ["@liuling_drunk"] = "醉",
   ["#jiusong_trig"] = "酒颂",
+  ["#jiusong"] = "酒颂：你可将一张锦囊牌当【酒】使用",
   ["#maotao-ask"] = "酕醄：你可弃1枚“醉”标记，随机改变%dest使用的%arg的目标",
 
   ["$jiusong1"] = "大人以天地为一朝，以万期为须臾。",
