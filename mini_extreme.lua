@@ -1440,7 +1440,7 @@ local hezong_delay = fk.CreateTriggerSkill{
     local responser = target == player and room:getPlayerById(player:getMark("_mini_hezong-round")) or player
     if event == fk.CardUseFinished then
       local to = self.cost_data
-      local use = room:askForUseCard(responser, "slash", "slash", "#mini_hezong-use:" .. target.id .. ":" .. to, true, {include_targets = {to}, bypass_times = true, bypass_distances = true })
+      local use = room:askForUseCard(responser, "slash", "slash", "#mini_hezong-use:" .. target.id .. ":" .. to, true, {exclusive_targets = {to}, bypass_times = true, bypass_distances = true })
       if use then
         use.extraUse = true
         room:useCard(use)
