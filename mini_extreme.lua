@@ -2132,4 +2132,127 @@ Fk:loadTranslationTable{
   ["#mini_sifu-active"] = "发动 思赋，从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张",
 }
 
+local guanyu = General(extension, "miniex__guanyu", "shu", 4)
+
+local mini__yihan = fk.CreateActiveSkill{
+  name = "mini__yihan",
+  prompt = "#mini__yihan",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 1,
+  times = function(self)
+    return 1 + Self:getMark("mini_strive_times-round") - Self:usedSkillTimes(self.name, Player.HistoryRound)
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) < 1 + player:getMark("mini_strive_times-round")
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    local useables = {}
+    local useableTrues = {}
+    local extra_data = {bypass_times = true}
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if card.type ~= Card.TypeEquip and not to:prohibitUse(card) and card.skill:canUse(to, card, extra_data) then
+        table.insertIfNeed(useables, card.name)
+        table.insertIfNeed(useableTrues, card.trueName)
+      end
+    end
+    if #useables > 0 then
+      local pattern = table.concat(useableTrues, ",") .. "|.|.|.|" .. table.concat(useables, ",")
+      local equips = to:getCardIds("e")
+      if #equips > 0 then
+        pattern = pattern .. "|.|^(" .. table.concat(equips, ",") .. ")"
+      end
+      local use = room:askForUseCard(to, self.name, pattern, "#mini__yihan", true, extra_data)
+      if use then
+        use.extraUse = true
+        room:useCard(use)
+        return
+      end
+    end
+    room:useVirtualCard("slash", nil, player, to, self.name, true)
+  end,
+}
+
+local MiniStriveSkillRecord = fk.CreateTriggerSkill{
+  name = "#mini_strive_reocrd",
+  refresh_events = {fk.Damage, fk.Damaged},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and player:getMark("mini_strive_times-round") < 4
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room:addPlayerMark(player, "mini_strive_times-round", 1)
+  end,
+}
+mini__yihan:addRelatedSkill(MiniStriveSkillRecord)
+
+guanyu:addSkill(mini__yihan)
+
+local mini__wuwei = fk.CreateActiveSkill{
+  name = "mini__wuwei",
+  prompt = function (self)
+    return "#mini__wuwei:::"..(Self:usedSkillTimes(self.name, Player.HistoryPhase) + 1)
+  end,
+  anim_type = "offensive",
+  target_num = 1,
+  can_use = function(self, player)
+    return true
+  end,
+  card_filter = function (self, to_select, selected)
+    local num = Self:usedSkillTimes(self.name, Player.HistoryPhase) + 1
+    return #selected < num and not Self:prohibitDiscard(Fk:getCardById(to_select))
+  end,
+  target_filter = function(self, to_select, selected, cards)
+    local num = Self:usedSkillTimes(self.name, Player.HistoryPhase) + 1
+    if #cards == num then
+      return #selected == 0 and not Fk:currentRoom():getPlayerById(to_select):isNude()
+    end
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local myNum = 0
+    for _, id in ipairs(effect.cards) do
+      myNum = myNum + Fk:getCardById(id).number
+    end
+    room:throwCard(effect.cards, self.name, player, player)
+    if player.dead then return end
+    local cardNum = #effect.cards
+    local to = room:getPlayerById(effect.tos[1])
+    local toNum, toCards = 0, to:getCardIds("he")
+    if #toCards > cardNum then
+      toCards = room:askForCardsChosen(player, to, cardNum, cardNum, "he", self.name)
+    end
+    for _, id in ipairs(toCards) do
+      if Fk:getCardById(id).type == Card.TypeEquip then
+        toNum = toNum + Fk:getCardById(id).number
+      end
+    end
+    room:throwCard(toCards, self.name, to, player)
+    if not to.dead and myNum <= toNum then
+      room:damage { from = player, to = to, damage = 1, skillName = self.name, damageType = fk.ThunderDamage }
+    end
+  end,
+}
+guanyu:addSkill(mini__wuwei)
+
+Fk:loadTranslationTable{
+  ["miniex__guanyu"] = "极关羽",
+
+  ["mini__yihan"] = "翊汉",
+  [":mini__yihan"] = "<a href='MiniStriveSkill'>奋武技</a>，出牌阶段，你可令一名其他角色选择一项：1、使用一张非装备牌；2、令你视为对其使用一张无次数限制的【杀】。",
+  ["#mini__yihan"] = "翊汉：令一名其他角色选择使用非装备牌，否则被你使用【杀】",
+  ["#mini__yihan-use"] = "翊汉：你需使用一张非装备牌，否则被【杀】！",
+  ["MiniStriveSkill"] = "奋武技，每轮使用次数为（本轮你造成和受到的伤害值）+1，且至多为5。",
+
+  ["mini__wuwei"] = "武威",
+  [":mini__wuwei"] = "出牌阶段，你可以弃置X+1牌(X为此阶段“武威”的发动次数)，然后弃置一名角色等量张牌。若你因此弃置的牌点数之和不大于其被弃置的装备牌点数之和，你对其造成1点雷电伤害。",
+  ["#mini__wuwei"] = "武威：弃置 %arg 张牌并弃置一名角色等量张牌，然后可能对其造成伤害",
+}
+
 return extension
