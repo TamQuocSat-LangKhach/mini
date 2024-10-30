@@ -391,7 +391,7 @@ local mini__wansha_prohibit = fk.CreateProhibitSkill{
     if card.name == "peach" and not player.dying then
       local invoke, ret
       for _, p in ipairs(Fk:currentRoom().alive_players) do
-        if p.phase ~= Player.NotActive and p:hasSkill(mini__wansha.name) then
+        if p.phase ~= Player.NotActive and p:hasSkill(mini__wansha) then
           invoke = true
         end
         if p.dying then
