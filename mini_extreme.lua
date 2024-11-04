@@ -606,7 +606,7 @@ local zhuixi = fk.CreateTriggerSkill{
 local mini_zhuixi_distance = fk.CreateDistanceSkill{
   name = "#mini_zhuixi_distance",
   fixed_func = function(self, from, to)
-    if from:hasSkill(self) and #to:getEquipments(Card.SubtypeDefensiveRide) == 0 and #to:getEquipments(Card.SubtypeDefensiveRide) == 0 then
+    if from:hasSkill(self) and #to:getEquipments(Card.SubtypeOffensiveRide) == 0 and #to:getEquipments(Card.SubtypeDefensiveRide) == 0 then
       return 1
     end
   end,
