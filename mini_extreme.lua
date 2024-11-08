@@ -2007,6 +2007,125 @@ Fk:loadTranslationTable{
   ["@@mini_pingjiang_invalid-turn"] = "平江失效",
   ["#mini_pingjiang_buff"] = "平江",
 }
+
+local sunquan = General(extension, "miniex__sunquan", "wu", 4)
+
+local zongxi = fk.CreateActiveSkill{
+  name = "mini__zongxi",
+  anim_type = "control",
+  min_card_num = 1,
+  min_target_num = 2,
+  prompt = "#mini__zongxi",
+  card_filter = function(self, to_select, selected)
+    return #selected < 4 and table.contains(Self.player_cards[Player.Hand], to_select)
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    local to = Fk:currentRoom():getPlayerById(to_select)
+    if #selected < #selected_cards and not to:isKongcheng() then
+      return to_select == Self.id or Self:canPindian(to)
+    end
+  end,
+  feasible = function(self, selected, selected_cards)
+    return #selected > 1 and #selected == #selected_cards
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:sortPlayersByAction(effect.tos)
+    local tos = table.map(effect.tos, Util.Id2PlayerMapper)
+    local cards = effect.cards
+    if #cards > 1 then
+      cards = room:askForGuanxing(player, cards, nil, {0,0}, self.name, true).top
+    end
+    if #cards > 0 then
+      room:moveCards({
+        ids = table.reverse(cards),
+        from = player.id,
+        toArea = Card.DrawPile,
+        moveReason = fk.ReasonPut,
+        skillName = self.name,
+        proposer = player.id,
+      })
+    end
+    tos = table.filter(tos, function(p) return not p.dead and not p:isKongcheng() end)
+    if #tos < 2 then return end
+    local first = table.remove(tos, 1)
+    local pd = U.jointPindian(first, tos, self.name)
+    local winner = pd.winner
+    if winner and not winner.dead then
+      winner:drawCards(2, self.name)
+    end
+    if player.dead then return end
+    local ids = {}
+    if pd.from ~= player then
+      local cid = pd.fromCard:getEffectiveId()
+      if cid and room:getCardArea(cid) == Card.DiscardPile then
+        table.insert(ids, cid)
+      end
+    end
+    for _, pid in ipairs(effect.tos) do
+      if pd.results[pid] and pd.results[pid].toCard then
+        local cid = pd.results[pid].toCard:getEffectiveId()
+        if cid and room:getCardArea(cid) == Card.DiscardPile then
+          table.insert(ids, cid)
+        end
+      end
+    end
+    room:obtainCard(player, ids, true, fk.ReasonJustMove, player.id, self.name)
+  end,
+}
+sunquan:addSkill(zongxi)
+
+local luheng = fk.CreateTriggerSkill{
+  name = "mini__luheng",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and player.phase == Player.Finish
+    and player:usedSkillTimes(zongxi.name, Player.HistoryTurn) > 0
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local targets = {}
+    room.logic:getEventsOfScope(U.JointPindianEvent, 1, function(e)
+      local pd = e.data[1]
+      table.insertIfNeed(targets, pd.from)
+      table.insertTableIfNeed(targets, pd.tos)
+    end, Player.HistoryTurn)
+    targets = table.filter(targets, function(p) return not p.dead and p ~= player end)
+    if #targets == 0 then return false end
+    local maxNum = 0
+    for _, p in ipairs(targets) do
+      maxNum = math.max(maxNum, p:getHandcardNum())
+    end
+    targets = table.filter(targets, function(p) return p:getHandcardNum() == maxNum end)
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#mini__luheng-choose", self.name, true)
+    if #tos > 0 then
+      self.cost_data = {tos = tos}
+      return true
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    player.room:useVirtualCard("slash", nil, player, player.room:getPlayerById(self.cost_data.tos[1]), self.name, true)
+  end,
+}
+sunquan:addSkill(luheng)
+
+Fk:loadTranslationTable{
+  ["miniex__sunquan"] = "极孙权",
+
+  ["mini__zongxi"] = "纵阋",
+  [":mini__zongxi"] = "出牌阶段限一次，你可将至多四张手牌以任意顺序置于牌堆顶，然后令X名角色进行“逐鹿”(X为你以此法置于牌堆的牌数)，赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
+  ["#mini__zongxi"] = "纵阋：将至多4张手牌置于牌堆顶，令等量名角色共同拼点",
+
+  ["mini__luheng"] = "戮衡",
+  [":mini__luheng"] = "结束阶段，若你本回合发动过“纵阋”，你可选择一名本回合参与过“逐鹿”中手牌数最多的其他角色，视为对其使用一张【杀】。",
+  ["#mini__luheng-choose"] = "戮衡：选择参与过“逐鹿”中手牌数最多的其他角色，视为对其使用一张【杀】",
+}
+
 local miniex__caiwenji = General(extension, "miniex__caiwenji", "qun", 3, 3, General.Female)
 local mini_beijia = fk.CreateViewAsSkill{
   name = "mini_beijia",
