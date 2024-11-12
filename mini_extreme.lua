@@ -2126,6 +2126,114 @@ Fk:loadTranslationTable{
   ["#mini__luheng-choose"] = "戮衡：选择参与过“逐鹿”中手牌数最多的其他角色，视为对其使用一张【杀】",
 }
 
+local zhouyu = General(extension, "miniex__zhouyu", "wu", 3)
+
+local miniex__yingrui = fk.CreateTriggerSkill{
+  name = "miniex__yingrui",
+  anim_type = "special",
+  events = {fk.EventPhaseEnd, fk.Deathed},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) or player:getMark("@mini_moulue") >= 5 then return end
+    if event == fk.EventPhaseEnd then
+      return player == target and player.phase == Player.Draw
+    else
+      return data.damage and data.damage.from == player
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    handleMoulue(player.room, player, 4)
+  end,
+}
+zhouyu:addSkill(miniex__yingrui)
+
+local miniex__fenli = fk.CreateActiveSkill{
+  name = "miniex__fenli",
+  anim_type = "control",
+  card_num = 0,
+  min_target_num = 1,
+  prompt = "#miniex__fenli",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_moulue") > 1
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    local to = Fk:currentRoom():getPlayerById(to_select)
+    if to:isNude() then return false end
+    if #selected == 0 then
+      return true
+    else
+      local first = Fk:currentRoom():getPlayerById(selected[1])
+      return to:getNextAlive() == first or first:getNextAlive() == to
+    end
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    handleMoulue(room, player, -2)
+    local tos = effect.tos
+    room:sortPlayersByAction(tos)
+    tos = table.map(tos, Util.Id2PlayerMapper)
+    local colors = {}
+    for _, to in ipairs(tos) do
+      if not to:isNude() then
+        local cid = room:askForCardChosen(player, to, "he", self.name)
+        table.insertIfNeed(colors, Fk:getCardById(cid).color)
+        room:throwCard(cid, self.name, to, player)
+      end
+    end
+    if player:getMark("@mini_moulue") > 1 and #colors == 1 and room:askForSkillInvoke(player, self.name, nil,
+    "#miniex__fenli-damage") then
+      handleMoulue(room, player, -2)
+      for _, to in ipairs(tos) do
+        if not to.dead then
+          room:doIndicate(player.id, {to.id})
+          room:damage { from = player, to = to, damage = 1, skillName = self.name, damageType = fk.FireDamage }
+        end
+      end
+    end
+  end,
+}
+zhouyu:addSkill(miniex__fenli)
+
+local miniex__qugu = fk.CreateTriggerSkill{
+  name = "miniex__qugu",
+  anim_type = "drawcard",
+  events = {fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and data.from and data.from ~= player.id
+    and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 then
+      local firstEvent = player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
+        return table.contains(TargetGroup:getRealTargets(e.data[1].tos), player.id)
+      end, Player.HistoryTurn)[1]
+      local useParent = player.room.logic:getCurrentEvent()
+      return useParent and firstEvent and useParent.id == firstEvent.id
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local ids = room:getCardsFromPileByRule(".|.|.|.|.|^"..data.card:getTypeString())
+    if #ids > 0 then
+      room:obtainCard(player, ids, true, fk.ReasonJustMove, player.id, self.name)
+    end
+  end,
+}
+zhouyu:addSkill(miniex__qugu)
+
+Fk:loadTranslationTable{
+  ["miniex__zhouyu"] = "极周瑜",
+
+  ["miniex__yingrui"] = "英锐",
+  [":miniex__yingrui"] = "摸牌阶段结束时，或当你杀死一名角色后，你获得4点“谋略”值。",
+
+  ["miniex__fenli"] = "焚离",
+  [":miniex__fenli"] = "出牌阶段限一次，你可以消耗2点“谋略”值，弃置至多两名座次相邻角色各一张牌，若这些牌颜色相同，你可以再消耗2点“谋略”值，对这些角色依次造成1点火焰伤害。",
+  ["#miniex__fenli"] = "焚离：消耗2点“谋略”值，弃置至多两名座次相邻角色各一张牌",
+  ["#miniex__fenli-damage"] = "焚离：可以消耗2点“谋略”值，对其各造成1点火焰伤害",
+
+  ["miniex__qugu"] = "曲顾",
+  [":miniex__qugu"] = "每回合你首次成为其他角色使用牌的目标后，你可以从牌堆中获得一张与此牌类别不同的牌。",
+}
+
 local miniex__caiwenji = General(extension, "miniex__caiwenji", "qun", 3, 3, General.Female)
 local mini_beijia = fk.CreateViewAsSkill{
   name = "mini_beijia",
