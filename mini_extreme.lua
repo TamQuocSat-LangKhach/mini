@@ -2217,7 +2217,7 @@ local miniex__qugu = fk.CreateTriggerSkill{
     end
   end,
 }
-zhouyu:addSkill(miniex__qugu)
+--zhouyu:addSkill(miniex__qugu)
 
 Fk:loadTranslationTable{
   ["miniex__zhouyu"] = "极周瑜",
