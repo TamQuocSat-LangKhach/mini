@@ -344,4 +344,90 @@ Fk:loadTranslationTable{
   ["~wangrong"] = "自阮，嵇云亡，为世所羁，实有所叹。",
 }
 
+local xiangxiu = General(extension, "xiangxiu", "wei", 3, 3, General.Female)
+
+local miaoxi = fk.CreateActiveSkill{
+  name = "miaoxi",
+  anim_type = "control",
+  card_num = 1,
+  target_num = 1,
+  prompt = "#miaoxi",
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and table.contains(Self.player_cards[Player.Hand], to_select)
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and Self.id ~= to_select and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+    and #selected_cards == 1
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    local toCards = room:askForCard(to, 1, 1, false, self.name, false)
+    player:showCards(effect.cards)
+    to:showCards(toCards)
+    local myCard, toCard = Fk:getCardById(effect.cards[1]), Fk:getCardById(toCards[1])
+    if myCard.color == toCard.color then
+      room:obtainCard(player, toCard, true, fk.ReasonPrey, player.id, self.name)
+    end
+    if myCard.type == toCard.type and not to.dead then
+      room:loseHp(to, 1, self.name)
+    end
+    if myCard.number == toCard.number and player:getMark("miaoxi-turn") == 0 then
+      room:setPlayerMark(player, "miaoxi-turn", 1)
+      player:setSkillUseHistory(self.name, 0, Player.HistoryPhase)
+    end
+  end,
+}
+xiangxiu:addSkill(miaoxi)
+
+local sijiu = fk.CreateTriggerSkill{
+  name = "sijiu",
+  events = {fk.RoundEnd},
+  anim_type = "drawcard",
+  can_trigger = function (self, event, target, player, data)
+    if player:hasSkill(self) then
+      return #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+        for _, move in ipairs(e.data) do
+          if move.from and move.from ~= move.to and move.to == player.id and move.toArea == Card.PlayerHand then
+            for _, info in ipairs(move.moveInfo) do
+              if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+                return true
+              end
+            end
+          end
+        end
+        return false
+      end, Player.HistoryRound) > 0
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    player:drawCards(1, self.name)
+    if player.dead then return end
+    local targets = table.filter(room:getOtherPlayers(player, false), function (p) return not p:isKongcheng() end)
+    if #targets == 0 then return false end
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#sijiu-choose", self.name, false)
+    if #tos > 0 then
+      local to = room:getPlayerById(tos[1])
+      U.viewCards(player, to.player_cards[Player.Hand], self.name, "$ViewCardsFrom:"..to.id)
+    end
+  end,
+}
+xiangxiu:addSkill(sijiu)
+
+Fk:loadTranslationTable{
+  ["xiangxiu"] = "向秀",
+
+  ["miaoxi"] = "妙析",
+  [":miaoxi"] = "出牌阶段限一次，你可以选择一名其他角色，与其同时展示一张手牌，若这些牌：颜色相同，你获得其的展示牌；类别相同，其失去1点体力；点数相同，〖妙析〗视为未发动且此项本回合失效。",
+  ["#miaoxi"] = "妙析：请选择一张手牌并指定一名其他角色，与其共同展示一张手牌",
+
+  ["sijiu"] = "思旧",
+  [":sijiu"] = "每轮结束时，若你本轮获得过其他角色的牌，你可以摸一张牌并观看一名其他角色的手牌。",
+  ["#sijiu-choose"] = "思旧：观看一名其他角色的手牌",
+}
+
 return extension
