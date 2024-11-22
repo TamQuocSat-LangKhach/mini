@@ -1017,37 +1017,9 @@ local zhujiu = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local extraData = {
-      num = 1,
-      min_num = 1,
-      include_equip = false,
-      pattern = ".",
-      reason = self.name,
-    }
-    local prompt = "#askForZhujiu"
-    local data = { "choose_cards_skill", prompt, true, extraData }
-    local fromCard, toCard
-    local targets = {player, target}
-    for _, to in ipairs(targets) do
-      to.request_data = json.encode(data)
-    end
-
-    room:notifyMoveFocus(targets, "AskForCardChosen")
-    room:doBroadcastRequest("AskForUseActiveSkill", targets)
-
-    for _, p in ipairs(targets) do
-      local discussionCard -- 论英雄也是论
-      if p.reply_ready then
-        local replyCard = json.decode(p.client_reply).card
-        discussionCard = json.decode(replyCard).subcards[1]
-      else
-        discussionCard = p:getCardIds(Player.Hand)[1]
-      end
-      if p == player then fromCard = discussionCard else toCard = discussionCard end
-    end
-
+    local result = U.askForJointCard({player, target}, 1, 1, false, self.name, false, ".|.|.|hand", "#askForZhujiu")
+    local fromCard, toCard = result[player.id][1], result[target.id][1]
     U.swapCards(room, player, player, target, {fromCard}, {toCard}, self.name)
-
     if Fk:getCardById(fromCard):compareColorWith(Fk:getCardById(toCard)) then
       if player:isWounded() and not player.dead then
         room:recover{
@@ -1075,10 +1047,10 @@ miniex__caocao:addSkill("hujia") -- 村
 Fk:loadTranslationTable{
   ["miniex__caocao"] = "极曹操",
   ["mini_delu"] = "得鹿",
-  [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次“逐鹿”，赢的角色依次获得没赢的角色区域内随机一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。" ..
-  "<br/><font color='grey'>#\"<b>逐鹿</b>\"即“共同拼点”，所有角色一起拼点比大小。",
+  [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次<a href='zhuluPindian'>逐鹿</a>，赢的角色依次获得没赢的角色区域内随机一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。",
   ["mini_zhujiu"] = "煮酒",
   [":mini_zhujiu"] = "出牌阶段限一次，你可选择一名其他角色，你与其同时选择一张手牌并交换，若这两张牌颜色相同/不同，你回复1点体力/你对其造成1点伤害。",
+  ["zhuluPindian"] = "<b>逐鹿</b>：即“共同拼点”，所有目标角色一起拼点，至多有一个胜者，点数最大者有多人时视为无胜者。",
 
   ["#mini_delu_delay"] = "得鹿",
   ["#mini_delu_get"] = "得鹿：获得%dest区域内一张牌",
@@ -1310,8 +1282,7 @@ yuanshao:addSkill(mengshou)
 Fk:loadTranslationTable{
   ["miniex__yuanshao"] = "极袁绍",
   ["mini_zunbei"] = "尊北",
-  [":mini_zunbei"] = "出牌阶段限一次，你可与所有其他角色进行一次“逐鹿”，然后若此次“逐鹿”：有胜者，则胜者视为使用一张【万箭齐发】，此牌结算结束后，你摸X张牌（X为受到此牌伤害的角色数）；没有胜者，则此技能视为此阶段未发动过。" ..
-  "<br/><font color='grey'>#\"<b>逐鹿</b>\"即“共同拼点”，所有角色一起拼点比大小。",
+  [":mini_zunbei"] = "出牌阶段限一次，你可与所有其他角色进行一次<a href='zhuluPindian'>逐鹿</a>，然后若此次“逐鹿”：有胜者，则胜者视为使用一张【万箭齐发】，此牌结算结束后，你摸X张牌（X为受到此牌伤害的角色数）；没有胜者，则此技能视为此阶段未发动过。",
   ["mini_mengshou"] = "盟首",
   [":mini_mengshou"] = "每轮限一次，当你受到其他角色造成的伤害时，若其本轮造成的伤害值不大于你，你可防止此伤害。",
 
@@ -2118,7 +2089,7 @@ Fk:loadTranslationTable{
   ["miniex__sunquan"] = "极孙权",
 
   ["mini__zongxi"] = "纵阋",
-  [":mini__zongxi"] = "出牌阶段限一次，你可将至多四张手牌以任意顺序置于牌堆顶，然后令X名角色进行“逐鹿”(X为你以此法置于牌堆的牌数)，赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
+  [":mini__zongxi"] = "出牌阶段限一次，你可将至多四张手牌以任意顺序置于牌堆顶，然后令X名角色进行<a href='zhuluPindian'>逐鹿</a>(X为你以此法置于牌堆的牌数)，赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
   ["#mini__zongxi"] = "纵阋：将至多4张手牌置于牌堆顶，令等量名角色共同拼点",
 
   ["mini__luheng"] = "戮衡",
