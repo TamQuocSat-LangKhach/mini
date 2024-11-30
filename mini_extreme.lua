@@ -1727,7 +1727,7 @@ miniex__xunyu:addSkill(xianshi)
 Fk:loadTranslationTable{
   ["miniex__xunyu"] = "极荀彧",
   ["mini_wangzuo"] = "王佐",
-  [":mini_wangzuo"] = "每回合限一次，你可跳过摸牌阶段、出牌阶段或弃牌阶段，然后令一名其他角色执行一个对应的额外阶段。<br><font color='grey'>不要报告和此技能有关的，如与阶段、回合有关的bug。",
+  [":mini_wangzuo"] = "每回合限一次，你可跳过摸牌阶段、出牌阶段或弃牌阶段，然后令一名其他角色执行一个对应的额外阶段。<br><font color='red'><small>不要报告和此技能有关的，如与阶段、回合有关的bug。</small></font>",
   ["mini_juxian"] = "举贤",
   [":mini_juxian"] = "你的回合内，当其他角色的牌因使用、打出或弃置而进入弃牌堆后，你获得之。",
   ["mini_xianshi"] = "先识",
@@ -1735,6 +1735,14 @@ Fk:loadTranslationTable{
 
   ["#mini_wangzuo-ask"] = "你可以发动〖王佐〗，跳过 %arg，选择一名其他角色，令其执行 %arg",
   ["#mini_xianshi-exchange"] = "先识：观看牌堆顶的三张牌并用任意张手牌交换",
+
+  ["$mini_wangzuo1"] = "扶汉忠节守，佐王定策成。",
+  ["$mini_wangzuo2"] = "平乱锄奸，以匡社稷。",
+  ["$mini_juxian1"] = "遍推贤能，以襄明公大业。",
+  ["$mini_juxian2"] = "天下贤才之至，皆系于明公。",
+  ["$mini_xianshi1"] = "见识通达，以全乱世之机。",
+  ["$mini_xianshi2"] = "储先谋后，万事皆成。",
+  ["~miniex__xunyu"] = "初旨可共图，殊途难同归。",
 }
 
 local miniex__zhenji = General(extension, "miniex__zhenji", "wei", 3, 3, General.Female)
@@ -1834,6 +1842,12 @@ Fk:loadTranslationTable{
   ["mini_shenfu_red"] = "获得其中的红色牌",
   ["#mini_shenfu-use"] = "神赋：你可以使用 %arg",
   ["#mini_siyuan-invoke"] = "你可以发动〖思怨〗，选择一名其他角色，令 %src 视为对其造成过1点伤害",
+
+  ["$mini_shenfu1"] = "往事尽于此赋，来者惟于清零。",
+  ["$mini_shenfu2"] = "我身飘零于尘，此心空寄洛水。",
+  ["$mini_siyuan1"] = "陛下既不怜我，何不赦我归去。",
+  ["$mini_siyuan2"] = "后宫三千佳丽，无我一人又何妨",
+  ["~miniex__zhenji"] = "以发覆面，何等凄凉……",
 }
 
 local miniex__sunce = General(extension, "miniex__sunce", "wu", 4)
@@ -1993,6 +2007,14 @@ Fk:loadTranslationTable{
   ["#mini_pingjiang-active"] = "你可以发动〖平江〗，选择一名有“讨逆”的角色，视为对其使用【决斗】",
   ["@mini_pingjiang-turn"] = "平江",
   ["#mini_pingjiang_buff"] = "平江",
+
+  ["$mini_taoni1"] = "欲立万丈之基，先净门庭之度。",
+  ["$mini_taoni2"] = "扫定四野，百姓自当归附。",
+  ["$mini_pingjiang1"] = "一山难存二虎，东吴岂容二王？",
+  ["$mini_pingjiang2"] = "九州东南，尽是孙家天下。",
+  ["$mini_dingye1"] = "凭三江之固，以观天下成败！",
+  ["$mini_dingye2"] = "吾志岂安于此，当在天下万方！",
+  ["~miniex__sunce"] = "有众卿鼎力相辅，仲谋必成大事。",
 }
 
 local sunquan = General(extension, "miniex__sunquan", "wu", 4)
@@ -2111,6 +2133,12 @@ Fk:loadTranslationTable{
   ["mini__luheng"] = "戮衡",
   [":mini__luheng"] = "结束阶段，若你本回合发动过“纵阋”，你可选择一名本回合参与过“逐鹿”中手牌数最多的其他角色，视为对其使用一张【杀】。",
   ["#mini__luheng-choose"] = "戮衡：选择参与过“逐鹿”中手牌数最多的其他角色，视为对其使用一张【杀】",
+
+  ["$mini__luheng1"] = "放肆！汝可知欺君之罪？",
+  ["$mini__luheng2"] = "卿欲试朕之龙威乎？",
+  ["$mini__zongxi1"] = "承位者当以才德为先，无需遵长幼之序。",
+  ["$mini__zongxi2"] = "太子当取诸子中之贤者，可稳一国之气运。",
+  ["~miniex__sunquan"] = "余子碌碌，竟无承位之人。",
 }
 
 local zhouyu = General(extension, "miniex__zhouyu", "wu", 3)
@@ -2219,6 +2247,14 @@ Fk:loadTranslationTable{
 
   ["miniex__qugu"] = "曲顾",
   [":miniex__qugu"] = "每回合你首次成为其他角色使用牌的目标后，你可以从牌堆中获得一张与此牌类别不同的牌。",
+
+  ["$miniex__yingrui1"] = "有吾筹谋，岂有败战之理？",
+  ["$miniex__yingrui2"] = "坚铠精械，正为今日之战！",
+  ["$miniex__fenli1"] = "东风催火，焚尽敌舟。",
+  ["$miniex__fenli2"] = "江火若白日，百里腾烟云。",
+  ["$miniex__qugu1"] = "妙手易有，佳音难得。",
+  ["$miniex__qugu2"] = "曲有误处，难免回顾。",
+  ["~miniex__zhouyu"] = "伯符，瑜来也……",
 }
 
 local miniex__caiwenji = General(extension, "miniex__caiwenji", "qun", 3, 3, General.Female)
@@ -2340,6 +2376,12 @@ Fk:loadTranslationTable{
   ["#mini_beijia-level"] = "悲笳（平）：你可将一张点数大于%arg的牌当任意普通锦囊牌使用",
   ["#mini_beijia-oblique"] = "悲笳（仄）：你可将一张点数小于%arg的牌当任意基本牌使用",
   ["#mini_sifu-active"] = "发动 思赋，从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张",
+
+  ["$mini_beijia1"] = "干戈日寻兮道路危，民卒流亡兮共哀悲。",
+  ["$mini_beijia2"] = "烟尘蔽野兮胡虏盛，志意乖兮节义亏。",
+  ["$mini_sifu1"] = "云山万重兮归路遐，疾风千里兮扬尘沙。",
+  ["$mini_sifu2"] = "无日无夜兮不思我乡土，禀气合生兮莫过我最苦。",
+  ["~miniex__caiwenji"] = "怨兮欲问天，天苍苍兮上无缘……",
 }
 
 local guanyu = General(extension, "miniex__guanyu", "shu", 4)
@@ -2444,6 +2486,12 @@ Fk:loadTranslationTable{
   ["mini__wuwei"] = "武威",
   [":mini__wuwei"] = "<a href='MiniStriveSkill'>奋武技</a>，出牌阶段，你可以弃置X+1张牌（X为此阶段本技能的发动次数），然后弃置一名角色等量张牌。若你弃置自己的牌点数之和不大于弃置其的牌点数之和，你对其造成1点雷电伤害。",
   ["#mini__wuwei"] = "武威：弃置 %arg 张牌并弃置一名角色等量张牌，然后可能对其造成伤害",
+
+  ["$mini__yihan1"] = "大丈夫匡汉为任，岂耽于浮名。",
+  ["$mini__yihan2"] = "助兄复汉，某义不容辞。",
+  ["$mini__wuwei1"] = "三军既出，自怯敌之胆。",
+  ["$mini__wuwei2"] = "来将何人？可知关某之名！",
+  ["~miniex__guanyu"] = "大丈夫为忠为义，何惜死乎！",
 }
 
 return extension
