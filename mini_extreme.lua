@@ -21,6 +21,14 @@ local function changeRhyme(room, player, skillName, scope)
   player:setSkillUseHistory(skillName, 0, scope)
 end
 
+Fk:loadTranslationTable{
+  ["rhyme_skill"] = "<b>韵律技：</b><br>一种特殊的技能，分为“平”和“仄”两种状态。游戏开始时，韵律技处于“平”状态；满足“转韵”条件后，"..
+  "韵律技会转换到另一个状态，且重置技能发动次数。",
+  ["mini_moulue"] = "<b>谋略值：</b><br>谋略值上限为5，有谋略值的角色拥有技能<a href=':mini_miaoji'>〖妙计〗</a>。",
+  ["zhuluPindian"] = "<b>逐鹿：</b><br>即“共同拼点”，所有目标角色一起拼点，至多有一个胜者，点数最大者有多人时视为无胜者。",
+  ["MiniStriveSkill"] = "<b>奋武技：</b><br>每轮使用次数为（本轮你造成和受到的伤害值）+1，且至多为5。",
+}
+
 local lvbu = General(extension, "miniex__lvbu", "qun", 4)
 local mini_xiaohu = fk.CreateTriggerSkill{
   name = "mini_xiaohu",
@@ -222,9 +230,7 @@ daqiao:addSkill(mini_jielie)
 Fk:loadTranslationTable{
   ["miniex__daqiao"] = "极大乔",
   ["mini_xiangzhi"] = "相知",
-  [":mini_xiangzhi"] = "韵律技，出牌阶段限一次，平：你摸一张牌；仄：你回复1点体力。<br>转韵：你发动〖节烈〗后。<br>"..
-  "<font color='grey'>\"<b>韵律技</b>\"<br>一种特殊的技能，分为“平”和“仄”两种状态。游戏开始时，韵律技处于“平”状态；满足“转韵”条件后，"..
-  "韵律技会转换到另一个状态，且重置技能发动次数。",
+  [":mini_xiangzhi"] = "<a href='rhyme_skill'>韵律技</a>，出牌阶段限一次，平：你摸一张牌；仄：你回复1点体力。<br>转韵：你发动〖节烈〗后。",
   ["mini_jielie"] = "节烈",
   [":mini_jielie"] = "出牌阶段限一次，你可以选择一项，令一名其他角色：1.其可以使用一张手牌，若此牌为红色【杀】，则你失去1点体力，"..
   "然后你可以再次发动〖节烈〗；2.你下次发动〖相知〗时，令其获得相同效果。",
@@ -338,10 +344,8 @@ xiaoqiao:addSkill(mini_shaoyan)
 Fk:loadTranslationTable{
   ["miniex__xiaoqiao"] = "极小乔",
   ["mini_tongxin"] = "同心",
-  [":mini_tongxin"] = "韵律技，出牌阶段限一次，平：你可以令一名其他角色交给你一张手牌，然后若其手牌数不大于你，其摸一张牌；"..
-  "仄：你可以交给一名其他角色一张手牌，然后若其手牌数不小于你，你对其造成1点伤害。<br>转韵：出牌阶段，使用本回合未使用过的类型的牌。<br>"..
-  "<font color='grey'>\"<b>韵律技</b>\"<br>一种特殊的技能，分为“平”和“仄”两种状态。游戏开始时，韵律技处于“平”状态；满足“转韵”条件后，"..
-  "韵律技会转换到另一个状态，且重置技能发动次数。",
+  [":mini_tongxin"] = "<a href='rhyme_skill'>韵律技</a>，出牌阶段限一次，平：你可以令一名其他角色交给你一张手牌，然后若其手牌数不大于你，"..
+  "其摸一张牌；仄：你可以交给一名其他角色一张手牌，然后若其手牌数不小于你，你对其造成1点伤害。<br>转韵：出牌阶段，使用本回合未使用过的类型的牌。",
   ["mini_shaoyan"] = "韶颜",
   [":mini_shaoyan"] = "每回合限一次，当你成为其他角色使用牌的目标后，若其手牌数大于你，你摸一张牌。",
   ["#mini_tongxin-level"] = "同心：令一名角色交给你一张手牌，然后若其手牌数不大于你，其摸一张牌",
@@ -526,8 +530,7 @@ guojia:addRelatedSkill(mini_miaoji)
 Fk:loadTranslationTable{
   ["miniex__guojia"] = "极郭嘉",
   ["mini_suanlve"] = "算略",
-  [":mini_suanlve"] = "游戏开始时，你获得3点谋略值。每个回合结束时，你获得X点谋略值（X为你本回合使用牌的类别数）。"..
-  "<br><font color='grey'>#\"<b>谋略值</b>\"：谋略值上限为5，有谋略值的角色拥有〖妙计〗。</font>",
+  [":mini_suanlve"] = "游戏开始时，你获得3点<a href='mini_moulue'>谋略值</a>。每个回合结束时，你获得X点谋略值（X为你本回合使用牌的类别数）。",
   ["mini_dingce"] = "定策",
   [":mini_dingce"] = "每回合限一次，你可以消耗1点谋略值，将一张牌当你本回合使用的上一张基本牌或普通锦囊牌使用。",
   ["mini_miaoji"] = "妙计",
@@ -729,8 +732,8 @@ zhugeliang:addRelatedSkill("mini_miaoji")
 Fk:loadTranslationTable{
   ["miniex__zhugeliang"] = "极诸葛亮",
   ["mini_sangu"] = "三顾",
-  [":mini_sangu"] = "锁定技，每当有三张牌指定你为目标后，你获得3点“谋略值”，然后你观看牌堆顶的三张牌并将这些牌置于牌堆顶或牌堆底。"..
-  "<br><font color='grey'>#\"<b>谋略值</b>\"：谋略值上限为5，有谋略值的角色拥有〖妙计〗。</font>",
+  [":mini_sangu"] = "锁定技，每当有三张牌指定你为目标后，你获得3点<a href='mini_moulue'>谋略值</a>，然后你观看牌堆顶的三张牌并将这些牌"..
+  "置于牌堆顶或牌堆底。",
   ["mini_yanshi"] = "演势",
   [":mini_yanshi"] = "出牌阶段限一次，你可从牌堆顶或牌堆底（不可与你此阶段上一次选择的相同）摸一张牌。若你于此阶段使用了此牌，你可弃置一张牌再次发动〖演势〗。",
 
@@ -1050,7 +1053,6 @@ Fk:loadTranslationTable{
   [":mini_delu"] = "出牌阶段限一次，你可与任意名体力值不大于你的角色进行一次<a href='zhuluPindian'>逐鹿</a>，赢的角色依次获得没赢的角色区域内随机一张牌。此次你拼点的牌点数+X（X为参加拼点的角色数）。",
   ["mini_zhujiu"] = "煮酒",
   [":mini_zhujiu"] = "出牌阶段限一次，你可选择一名其他角色，你与其同时选择一张手牌并交换，若这两张牌颜色相同/不同，你回复1点体力/你对其造成1点伤害。",
-  ["zhuluPindian"] = "<b>逐鹿</b>：即“共同拼点”，所有目标角色一起拼点，至多有一个胜者，点数最大者有多人时视为无胜者。",
 
   ["#mini_delu_delay"] = "得鹿",
   ["#mini_delu_get"] = "得鹿：获得%dest区域内一张牌",
@@ -1740,19 +1742,19 @@ local shenfu = fk.CreateTriggerSkill{
   name = "mini_shenfu",
   events = {fk.Damaged, fk.EventPhaseStart},
   can_trigger = function (self, event, target, player, data)
-    return player:hasSkill(self) and (event == fk.Damaged or (target == player and player.phase == Player.Start and player:getMark("@mini_shenfu_luoshen") > 0))
-  end,
-  on_cost = function (self, event, target, player, data)
-    if event == fk.Damaged then
-      return true
-    else
-      return player.room:askForSkillInvoke(player, self.name, data, "#mini_shenfu-invoke:::" .. player:getMark("@mini_shenfu_luoshen"))
+    if player:hasSkill(self) then
+      if event == fk.Damaged then
+        return player:getMark("@mini_shenfu_luoshen") < 6
+      elseif event == fk.EventPhaseStart then
+        return target == player and player.phase == Player.Finish and player:getMark("@mini_shenfu_luoshen") > 0
+      end
     end
   end,
+  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
     if event == fk.Damaged then
-      room:addPlayerMark(player, "@mini_shenfu_luoshen", data.damage)
+      room:addPlayerMark(player, "@mini_shenfu_luoshen", math.min(data.damage, 6 - player:getMark("@mini_shenfu_luoshen")))
     else
       local num = player:getMark("@mini_shenfu_luoshen")
       room:setPlayerMark(player, "@mini_shenfu_luoshen", 0)
@@ -1764,13 +1766,26 @@ local shenfu = fk.CreateTriggerSkill{
         skillName = self.name,
         proposer = player.id,
       }
-      for _, id in ipairs(cards) do
-        local card = Fk:getCardById(id)
-        if card.color == Card.Black and room:getCardArea(id) == Card.Processing and U.canUseCard(room, player, card) then
-          local use = U.askForUseRealCard(room, player, {id}, ".", self.name, "#mini_shenfu-use:::" .. card:toLogString(), {expand_pile = {id}, extra_use = true}, true)
-          if use then
-            room:useCard(use)
+      local choice = room:askForChoice(player, {"mini_shenfu_black", "mini_shenfu_red"}, self.name)
+      if choice == "mini_shenfu_black" then
+        for _, id in ipairs(cards) do
+          local card = Fk:getCardById(id)
+          if card.color == Card.Black and room:getCardArea(id) == Card.Processing and U.canUseCard(room, player, card) then
+            local use = U.askForUseRealCard(room, player, {id}, ".", self.name, "#mini_shenfu-use:::"..card:toLogString(), {
+              expand_pile = {id},
+              extra_use = true
+            }, true)
+            if use then
+              room:useCard(use)
+            end
           end
+        end
+      else
+        local red = table.filter(cards ,function (id)
+          return Fk:getCardById(id).color == Card.Red
+        end)
+        if #red > 0 then
+          room:obtainCard(player, red, true, fk.ReasonJustMove, player.id, self.name)
         end
       end
       room:cleanProcessingArea(cards, self.name)
@@ -1809,12 +1824,14 @@ miniex__zhenji:addSkill(siyuan)
 Fk:loadTranslationTable{
   ["miniex__zhenji"] = "极甄姬",
   ["mini_shenfu"] = "神赋",
-  [":mini_shenfu"] = "①当一名角色受到伤害后，你获得X枚“洛神”（X为伤害值）。②准备阶段，你可弃所有“洛神”，亮出牌堆顶等量张牌，然后可依次使用其中的黑色牌。",
+  [":mini_shenfu"] = "①当一名角色受到1点伤害后，你获得1枚“洛神”标记，上限为6。结束阶段，你弃置所有“洛神”标记，亮出牌堆顶等量张牌，"..
+  "然后选择一项：1.可以依次使用其中的黑色牌；2.获得其中的红色牌。",
   ["mini_siyuan"] = "思怨",
-  [":mini_siyuan"] = "当你受到伤害后，你可选择一名其他角色，令伤害来源视为对其造成过1点伤害。",
+  [":mini_siyuan"] = "当你受到伤害后，你可以选择一名其他角色，令伤害来源视为对其造成过1点伤害。",
 
   ["@mini_shenfu_luoshen"] = "洛神",
-  ["#mini_shenfu-invoke"] = "你可以发动〖神赋〗，弃所有“洛神”，亮出牌堆顶 %arg 张牌，然后可依次使用其中的黑色牌",
+  ["mini_shenfu_black"] = "依次使用其中的黑色牌",
+  ["mini_shenfu_red"] = "获得其中的红色牌",
   ["#mini_shenfu-use"] = "神赋：你可以使用 %arg",
   ["#mini_siyuan-invoke"] = "你可以发动〖思怨〗，选择一名其他角色，令 %src 视为对其造成过1点伤害",
 }
@@ -1869,7 +1886,7 @@ local pingjiang = fk.CreateActiveSkill{
   anim_type = "offensive",
   prompt = "#mini_pingjiang-active",
   can_use = function (self, player, card, extra_data)
-    return U.canUseCard(Fk:currentRoom(), player, Fk:cloneCard("duel")) and player:getMark("@@mini_pingjiang_invalid-turn") == 0
+    return U.canUseCard(Fk:currentRoom(), player, Fk:cloneCard("duel"))
   end,
   target_num = 1,
   target_filter = function (self, to_select)
@@ -1892,7 +1909,7 @@ local pingjiang = fk.CreateActiveSkill{
         room:addPlayerMark(player, "@mini_pingjiang-turn")
       end
       if use.damageDealt[player.id] then
-        room:setPlayerMark(player, "@@mini_pingjiang_invalid-turn", 1)
+        room:invalidateSkill(player, self.name, "-turn")
         room:setPlayerMark(player, "@mini_pingjiang-turn", 0)
       end
     end
@@ -1975,7 +1992,6 @@ Fk:loadTranslationTable{
   ["@@mini_taoni"] = "讨逆",
   ["#mini_pingjiang-active"] = "你可以发动〖平江〗，选择一名有“讨逆”的角色，视为对其使用【决斗】",
   ["@mini_pingjiang-turn"] = "平江",
-  ["@@mini_pingjiang_invalid-turn"] = "平江失效",
   ["#mini_pingjiang_buff"] = "平江",
 }
 
@@ -1988,7 +2004,7 @@ local zongxi = fk.CreateActiveSkill{
   min_target_num = 2,
   prompt = "#mini__zongxi",
   card_filter = function(self, to_select, selected)
-    return #selected < 4 and table.contains(Self.player_cards[Player.Hand], to_select)
+    return #selected < 3 and table.contains(Self.player_cards[Player.Hand], to_select)
   end,
   target_filter = function(self, to_select, selected, selected_cards)
     local to = Fk:currentRoom():getPlayerById(to_select)
@@ -2089,8 +2105,8 @@ Fk:loadTranslationTable{
   ["miniex__sunquan"] = "极孙权",
 
   ["mini__zongxi"] = "纵阋",
-  [":mini__zongxi"] = "出牌阶段限一次，你可将至多四张手牌以任意顺序置于牌堆顶，然后令X名角色进行<a href='zhuluPindian'>逐鹿</a>(X为你以此法置于牌堆的牌数)，赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
-  ["#mini__zongxi"] = "纵阋：将至多4张手牌置于牌堆顶，令等量名角色共同拼点",
+  [":mini__zongxi"] = "出牌阶段限一次，你可将至多三张牌以任意顺序置于牌堆顶，然后令X名角色进行<a href='zhuluPindian'>逐鹿</a>(X为你以此法置于牌堆的牌数)，赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
+  ["#mini__zongxi"] = "纵阋：将至多三张牌置于牌堆顶，令等量名角色共同拼点",
 
   ["mini__luheng"] = "戮衡",
   [":mini__luheng"] = "结束阶段，若你本回合发动过“纵阋”，你可选择一名本回合参与过“逐鹿”中手牌数最多的其他角色，视为对其使用一张【杀】。",
@@ -2189,12 +2205,12 @@ local miniex__qugu = fk.CreateTriggerSkill{
   end,
 }
 --zhouyu:addSkill(miniex__qugu)
-
+zhouyu:addRelatedSkill("mini_miaoji")
 Fk:loadTranslationTable{
   ["miniex__zhouyu"] = "极周瑜",
 
   ["miniex__yingrui"] = "英锐",
-  [":miniex__yingrui"] = "摸牌阶段结束时，或当你杀死一名角色后，你获得4点“谋略”值。",
+  [":miniex__yingrui"] = "摸牌阶段结束时，或当你杀死一名角色后，你获得4点<a href='mini_moulue'>谋略值</a>。",
 
   ["miniex__fenli"] = "焚离",
   [":miniex__fenli"] = "出牌阶段限一次，你可以消耗2点“谋略”值，弃置至多两名座次相邻角色各一张牌，若这些牌颜色相同，你可以再消耗2点“谋略”值，对这些角色依次造成1点火焰伤害。",
@@ -2242,43 +2258,41 @@ local mini_beijia = fk.CreateViewAsSkill{
     end
   end,
   view_as = function (self, cards)
-    if #cards ~= 1 then
-      return nil
-    end
+    if #cards ~= 1 or not self.interaction.data then return end
     local c = Fk:cloneCard(self.interaction.data)
     c.skillName = self.name
     c:addSubcard(cards[1])
     return c
-  end
+  end,
+
+  on_acquire = function (self, player, is_start)
+    local room = player.room
+    room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
+      local use = e.data[1]
+      if use.from == player.id then
+        room:setPlayerMark(player, "@mini_beijia", math.max(use.card.number, 0))
+        return true
+      end
+    end, 1)
+  end,
+  on_lose = function (self, player, is_death)
+    player.room:setPlayerMark(player, "@mini_beijia", 0)
+  end,
 }
 local mini_beijia_record = fk.CreateTriggerSkill{
   name = "#mini_beijia_record",
-  refresh_events = {fk.CardUsing, fk.EventAcquireSkill, fk.EventLoseSkill},
+
+  refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
-    if target ~= player then return end
-    if event == fk.CardUsing then return player:hasSkill("mini_beijia")
-    else return data.name == "mini_beijia" end
+    return target == player and player:hasSkill("mini_beijia")
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.EventAcquireSkill then
-      room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
-        local use = e.data[1]
-        if use and use.from == player.id then
-          room:setPlayerMark(player, "@mini_beijia", math.max(use.card.number, 0))
-          return true
-        end
-        return false
-      end, 1)
-    elseif event == fk.EventLoseSkill then
-      room:setPlayerMark(player, "@mini_beijia", 0)
-    else
-      local last_num = player:getMark("@mini_beijia")
-      if player.phase == Player.Play and last_num == data.card.number then
-        changeRhyme(room, player, "mini_beijia", Player.HistoryPhase)
-      end
-      room:setPlayerMark(player, "@mini_beijia", math.max(data.card.number, 0))
+    local last_num = player:getMark("@mini_beijia")
+    if player.phase == Player.Play and last_num == data.card.number then
+      changeRhyme(room, player, "mini_beijia", Player.HistoryPhase)
     end
+    room:setPlayerMark(player, "@mini_beijia", math.max(data.card.number, 0))
   end,
 }
 mini_beijia:addRelatedSkill(mini_beijia_record)
@@ -2317,10 +2331,8 @@ miniex__caiwenji:addSkill(mini_sifu)
 Fk:loadTranslationTable{
   ["miniex__caiwenji"] = "极蔡文姬",
   ["mini_beijia"] = "悲笳",
-  [":mini_beijia"] = "韵律技，每回合限一次，平：你可将一张点数大于X的牌当任意普通锦囊牌使用；仄：你可将一张点数小于X的牌当任意基本牌使用；" ..
-    "转韵：出牌阶段，使用一张点数等于X的牌（X为你使用的上一张牌的点数）。<br>" ..
-    "<font color='grey'>\"<b>韵律技</b>\"<br>一种特殊的技能，分为“平”和“仄”两种状态。游戏开始时，韵律技处于“平”状态；满足“转韵”条件后，"..
-    "韵律技会转换到另一个状态，且重置技能发动次数。",
+  [":mini_beijia"] = "<a href='rhyme_skill'>韵律技</a>，每回合限一次，平：你可将一张点数大于X的牌当任意普通锦囊牌使用；仄："..
+  "你可将一张点数小于X的牌当任意基本牌使用。<br>转韵：出牌阶段，使用一张点数等于X的牌（X为你使用的上一张牌的点数）。",
   ["mini_sifu"] = "思赋",
   [":mini_sifu"] = "出牌阶段限一次，你可从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张。",
 
@@ -2428,10 +2440,9 @@ Fk:loadTranslationTable{
   [":mini__yihan"] = "出牌阶段限一次，你可以展示一名其他角色的一张手牌，然后令其选择一项：1.将此牌交给你；2.令你视为对其使用一张无次数限制的【杀】。",
   ["#mini__yihan"] = "翊汉：展示一名其他角色的一张手牌，其需交给你，否则被你使用【杀】",
   ["#mini__yihan-ask"] = "翊汉：点“确定”：将%arg交给%dest；“取消”：被他使用【杀】",
-  ["MiniStriveSkill"] = "奋武技，每轮使用次数为（本轮你造成和受到的伤害值）+1，且至多为5。",
 
   ["mini__wuwei"] = "武威",
-  [":mini__wuwei"] = "<a href='MiniStriveSkill'>奋武技</a>，出牌阶段，你可以弃置X+1牌(X为此阶段本技能的发动次数)，然后弃置一名角色等量张牌。若你弃置自己的牌点数之和不大于弃置其的牌点数之和，你对其造成1点雷电伤害。",
+  [":mini__wuwei"] = "<a href='MiniStriveSkill'>奋武技</a>，出牌阶段，你可以弃置X+1张牌（X为此阶段本技能的发动次数），然后弃置一名角色等量张牌。若你弃置自己的牌点数之和不大于弃置其的牌点数之和，你对其造成1点雷电伤害。",
   ["#mini__wuwei"] = "武威：弃置 %arg 张牌并弃置一名角色等量张牌，然后可能对其造成伤害",
 }
 
