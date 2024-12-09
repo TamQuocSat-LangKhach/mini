@@ -769,7 +769,7 @@ local mini__qiangwu = fk.CreateActiveSkill{
     return player:usedSkillTimes(self.name) == 0
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand and not Self:prohibitDiscard(to_select)
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -834,7 +834,9 @@ local fengliang = fk.CreateTriggerSkill{
         recoverBy = player,
         skillName = self.name
       })
-      room:handleAddLoseSkills(player, "m_ex__tiaoxin", nil)
+      if not player.dead then
+        room:handleAddLoseSkills(player, "m_ex__tiaoxin", nil)
+      end
     end
   end,
 }
@@ -847,6 +849,128 @@ Fk:loadTranslationTable{
   [":mini_sp__kunfen"] = "结束阶段开始时，你可失去1点体力，然后摸两张牌。",
   ["mini_sp__fengliang"] = "逢亮",
   [":mini_sp__fengliang"] = "觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值回复至3点，获得〖挑衅〗。",
+}
+
+local wuguotai = General(extension, "mini__wuguotai", "wu", 3, 3, General.Female)
+local ganlu = fk.CreateActiveSkill{
+  name = "mini__ganlu",
+  prompt = "#mini__ganlu-active",
+  anim_type = "control",
+  card_num = 1,
+  target_num = 0,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand and not Self:prohibitDiscard(to_select)
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:throwCard(effect.cards, self.name, player, player)
+    if not player.dead then
+      local choices = {}
+      if #room:canMoveCardInBoard() > 0 then
+        table.insert(choices, "mini__ganlu_move")
+      end
+      local cards = table.connect(room.draw_pile, room.discard_pile)
+      for _, id in ipairs(cards) do
+        local sub_type = Fk:getCardById(id).sub_type
+        if Fk:getCardById(id).type == Card.TypeEquip and player:hasEmptyEquipSlot(sub_type) then
+          table.insert(choices, "mini__ganlu_put")
+          break
+        end
+      end
+      if #choices == 0 then return end
+      local choice = room:askForChoice(player, choices, self.name)
+      if choice == "mini__ganlu_move" then
+        local targets = room:askForChooseToMoveCardInBoard(player, "#mini__ganlu-move", self.name, true, nil)
+        if #targets ~= 0 then
+          targets = table.map(targets, Util.Id2PlayerMapper)
+          room:askForMoveCardInBoard(player, targets[1], targets[2], self.name)
+        end
+      else
+        local equipMap = {}
+        for _, id in ipairs(cards) do
+          local sub_type = Fk:getCardById(id).sub_type
+          if Fk:getCardById(id).type == Card.TypeEquip and player:hasEmptyEquipSlot(sub_type) then
+            local list = equipMap[tostring(sub_type)] or {}
+            table.insert(list, id)
+            equipMap[tostring(sub_type)] = list
+          end
+        end
+        local types = {}
+        for k, _ in pairs(equipMap) do
+          table.insert(types, k)
+        end
+        if #types == 0 then return end
+        types = table.random(types)
+        local put = table.random(equipMap[types])
+        room:moveCardIntoEquip(player, put, self.name, false, player)
+      end
+    end
+  end,
+}
+wuguotai:addSkill(ganlu)
+wuguotai:addSkill("buyi")
+
+Fk:loadTranslationTable{
+  ["mini__wuguotai"] = "吴国太",
+  ["mini__ganlu"] = "甘露",
+  [":mini__ganlu"] = "出牌阶段限一次，你可以弃置一张手牌，然后选择一项：1.移动场上一张装备区内的牌；2.将牌堆或弃牌堆中随机一张装备牌置入你的装备区。",
+
+  ["#mini__ganlu-active"] = "甘露：你可以弃置一张手牌，然后选择一项：1.移动场上一张装备区内的牌；2.将牌堆或弃牌堆中随机一张装备牌置入你的装备区",
+  ["#mini__ganlu-move"] = "甘露：移动场上一张装备区内的牌",
+  ["mini__ganlu_move"] = "移动场上一张装备区内的牌",
+  ["mini__ganlu_put"] = "将随机一张装备牌置入你的装备区",
+}
+
+local yangxiu = General(extension, "mini__yangxiu", "wei", 3)
+
+local danlao = fk.CreateActiveSkill{
+  name = "mini__danlao",
+  prompt = function() return "#mini__danlao-active:::" .. #Fk:currentRoom().alive_players end,
+  anim_type = "support",
+  card_num = 0,
+  target_num = 0,
+  card_filter = Util.FalseFunc,
+  target_filter = Util.FalseFunc,
+  can_use = function (self, player, card, extra_data)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  on_use = function (self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    player:broadcastSkillInvoke("danlao")
+    local cards = player:drawCards(#room.alive_players, self.name)
+    if player.dead then return end
+    local handcards = player:getCardIds("h")
+    cards = table.filter(cards, function(id) return table.contains(handcards, id) end)
+    local ret = room:askForYiji(player, cards, nil, self.name, nil, nil, "#mini__danlao-give")
+    local card = Fk:cloneCard("slash")
+    card.skillName = self.name
+    for _, p in ipairs(room:getAlivePlayers()) do
+      if not (player.dead or p.dead or #ret[p.id] > 0) and U.canUseCardTo(room, p, player, card) then
+        if room:askForChoice(p, {"mini__danlao-slash::" .. player.id, "Cancel"}, self.name):startsWith("mi") then
+          room:useVirtualCard("slash", nil, p, player, self.name, true)
+        end
+      end
+    end
+  end,
+}
+
+yangxiu:addSkill(danlao)
+yangxiu:addSkill("ty__jilei")
+
+Fk:loadTranslationTable{
+  ["mini__yangxiu"] = "杨修",
+  ["#mini__yangxiu"] = "恃才放旷",
+  ["illustrator:mini__yangxiu"] = "NOVART", -- 胸中绵帛
+
+  ["mini__danlao"] = "啖酪",
+  [":mini__danlao"] = "出牌阶段限一次，你可以摸X张牌，然后将这些牌分配给任意名角色，然后未以此法获得牌的角色可以视为对你使用【杀】。（X为存活角色数）",
+
+  ["#mini__danlao-active"] = "啖酪：你可以摸%arg张牌",
+  ["#mini__danlao-give"] = "啖酪：将这些牌分配给任意名角色，然后未以此法获得牌的角色可以视为对你使用【杀】",
+  ["mini__danlao-slash"] = "视为对%dest使用【杀】",
 }
 
 return extension
