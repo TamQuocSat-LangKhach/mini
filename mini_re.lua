@@ -883,7 +883,7 @@ local ganlu = fk.CreateActiveSkill{
       if #choices == 0 then return end
       local choice = room:askForChoice(player, choices, self.name)
       if choice == "mini__ganlu_move" then
-        local targets = room:askForChooseToMoveCardInBoard(player, "#mini__ganlu-move", self.name, true, nil)
+        local targets = room:askForChooseToMoveCardInBoard(player, "#mini__ganlu-move", self.name, true, "e")
         if #targets ~= 0 then
           targets = table.map(targets, Util.Id2PlayerMapper)
           room:askForMoveCardInBoard(player, targets[1], targets[2], self.name)

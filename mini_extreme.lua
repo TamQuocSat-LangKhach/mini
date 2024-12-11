@@ -1875,8 +1875,6 @@ local taoni = fk.CreateTriggerSkill{
     local room = player.room
     room:loseHp(player, num, self.name)
     if player.dead then return end
-    room:drawCards(player, num, self.name)
-    if player.dead then return end
     local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p) return p:getMark("@@mini_taoni") == 0 end), Util.IdMapper)
     if #targets > 0 then
       local tos = room:askForChoosePlayers(player, targets, 1, num, "#mini_taoni-choose:::" .. num, self.name, false)
@@ -1916,13 +1914,12 @@ local pingjiang = fk.CreateActiveSkill{
   on_use = function (self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
+    room:setPlayerMark(target, "@@mini_taoni", 0)
     local use = room:useVirtualCard("duel", nil, player, target, self.name, true)
     if use.damageDealt then
       if use.damageDealt[target.id] then
-        room:setPlayerMark(target, "@@mini_taoni", 0)
         room:addPlayerMark(player, "@mini_pingjiang-turn")
-      end
-      if use.damageDealt[player.id] then
+      else
         room:invalidateSkill(player, self.name, "-turn")
         room:setPlayerMark(player, "@mini_pingjiang-turn", 0)
       end
@@ -1948,7 +1945,7 @@ local pingjiang_buff = fk.CreateTriggerSkill{
     local num = player:getMark("@mini_pingjiang-turn")
     if event ~= fk.DamageCaused then
       data.fixedResponseTimes = data.fixedResponseTimes or {}
-      data.fixedResponseTimes["slash"] = (data.fixedResponseTimes["slash"] or 1) + 1
+      data.fixedResponseTimes["slash"] = (data.fixedResponseTimes["slash"] or 1) + num
       data.fixedAddTimesResponsors = data.fixedAddTimesResponsors or {}
       table.insert(data.fixedAddTimesResponsors, (event == fk.TargetSpecified and data.to or data.from))
     else
@@ -1994,10 +1991,10 @@ miniex__sunce:addSkill(dingye)
 Fk:loadTranslationTable{
   ["miniex__sunce"] = "极孙策",
   ["mini_taoni"] = "讨逆",
-  [":mini_taoni"] = "出牌阶段开始时，你可失去任意点体力，摸X张牌，然后令至多X名没有“讨逆”的其他角色各获得1枚“讨逆”，然后此回合你的手牌上限为你的体力上限。（X为你以此法失去的体力值）",
+  [":mini_taoni"] = "出牌阶段开始时，你可失去任意点体力，然后令至多X名没有“讨逆”的其他角色各获得1枚“讨逆”，然后此回合你的手牌上限为你的体力上限。",
   ["mini_pingjiang"] = "平江",
-  [":mini_pingjiang"] = "出牌阶段，你可选择一名有“讨逆”的角色，视为对其使用【决斗】。若其受到了此【决斗】的伤害，" ..
-  "弃其“讨逆”，你此回合使用的【决斗】目标角色需要打出【杀】的数量+1，对目标角色造成的伤害+1；若你受到了此【决斗】的伤害，此技能此回合失效。",
+  [":mini_pingjiang"] = "出牌阶段，你可选择一名有“讨逆”的角色，弃其“讨逆”，视为对其使用【决斗】。" ..
+  "若其受到了此【决斗】的伤害，你此回合使用的【决斗】目标角色需要打出【杀】的数量+1，对目标角色造成的伤害+1；否则此技能此回合失效。",
   ["mini_dingye"] = "鼎业",
   [":mini_dingye"] = "结束阶段，你回复X点体力。（X为此回合受到过伤害的角色数）",
 
