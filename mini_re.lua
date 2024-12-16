@@ -15,15 +15,13 @@ local mini__jianxiong = fk.CreateTriggerSkill{
   events = {fk.Damage},
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self) and target == player and data.card and player.phase ~= Player.NotActive and 
-    not table.contains(type(player:getMark("@$mini__jianxiong-turn")) == "table" and player:getMark("@$mini__jianxiong-turn") or {}, data.card.trueName) and 
+    not table.contains(player:getTableMark("@$mini__jianxiong-turn"), data.card.trueName) and 
     table.every(data.card:isVirtual() and data.card.subcards or {data.card.id}, function(id) return player.room:getCardArea(id) == Card.Processing end) and not player.dead
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:broadcastSkillInvoke("guixin")
-    local record = type(player:getMark("@$mini__jianxiong-turn")) == "table" and player:getMark("@$mini__jianxiong-turn") or {}
-    table.insert(record, data.card.trueName)
-    room:setPlayerMark(player, "@$mini__jianxiong-turn", record)
+    room:addTableMark(player, "@$mini__jianxiong-turn", data.card.trueName)
     room:obtainCard(player, data.card, true, fk.ReasonJustMove)
   end
 }

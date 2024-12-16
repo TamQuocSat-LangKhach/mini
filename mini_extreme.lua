@@ -800,13 +800,11 @@ local miaobi = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.CardUseFinished then
-      local record = player:getTableMark("_mini_miaobi_used-turn")
-      table.insert(record, data.card.trueName)
-      room:setPlayerMark(player, "_mini_miaobi_used-turn", record)
+      room:addTableMark(player, "_mini_miaobi_used-turn", data.card.trueName)
       local to = room:getPlayerById(self.cost_data)
       to:addToPile("mini_miaobi_penmanship", data.card, true, self.name)
       if table.contains(to:getPile("mini_miaobi_penmanship"), data.card.id) then
-        record = to:getTableMark("_mini_miaobi")
+        local record = to:getTableMark("_mini_miaobi")
         record[tostring(player.id)] = record[tostring(player.id)] or {}
         table.insert(record[tostring(player.id)], data.card.id)
         room:setPlayerMark(to, "_mini_miaobi", record)
