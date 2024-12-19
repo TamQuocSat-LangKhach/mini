@@ -1375,12 +1375,8 @@ local hezong = fk.CreateTriggerSkill{
     local targets = self.cost_data
     for i, pid in ipairs(targets) do
       local p = room:getPlayerById(pid)
-      local record = p:getTableMark("@mini_hezong-round")
-      table.insertIfNeed(record, room:getPlayerById(targets[3-i]).general)
-      room:setPlayerMark(p, "@mini_hezong-round", record)
-      record = p:getTableMark("_mini_hezong-round")
-      table.insertIfNeed(record, targets[3-i])
-      room:setPlayerMark(p, "_mini_hezong-round", targets[3-i])
+      room:addTableMarkIfNeed(p, "@mini_hezong-round", room:getPlayerById(targets[3-i]).general)
+      room:addTableMarkIfNeed(p, "_mini_hezong-round", targets[3-i])
     end
   end
 }
@@ -1550,9 +1546,7 @@ local wuwei = fk.CreateTriggerSkill{
     local to = self.cost_data
     room:setPlayerMark(player, "_mini_wuwei", to)
     target = room:getPlayerById(to)
-    local records = target:getTableMark("@mini_wuwei")
-    table.insertIfNeed(records, player.general)
-    room:setPlayerMark(target, "@mini_wuwei", records)
+    room:addTableMarkIfNeed(target, "@mini_wuwei", player.general)
   end
 }
 local wuwei_delay = fk.CreateTriggerSkill {
