@@ -2261,6 +2261,7 @@ local mini_beijia = fk.CreateViewAsSkill{
   name = "mini_beijia",
   anim_type = "control",
   card_num = 1,
+  pattern = ".",
   prompt = function(self)
     local number = Self:getMark("@mini_beijia")
     if Self:getSwitchSkillState(self.name, false) == fk.SwitchYang then
@@ -2280,7 +2281,13 @@ local mini_beijia = fk.CreateViewAsSkill{
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0
   end,
   enabled_at_response = function (self, player, response)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0 and not response
+    if player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0 and not response then
+      if player:getSwitchSkillState("mini_beijia", false) == fk.SwitchYang then
+        return Exppattern:Parse(Fk.currentResponsePattern):matchExp(".|.|.|.|.|trick|.")
+      else
+        return Exppattern:Parse(Fk.currentResponsePattern):matchExp(".|.|.|.|.|basic|.")
+      end
+    end
   end,
   card_filter = function(self, to_select, selected)
     if #selected == 0 and Fk.all_card_types[self.interaction.data] ~= nil then
