@@ -2278,10 +2278,10 @@ local mini_beijia = fk.CreateViewAsSkill{
     end
   end,
   enabled_at_play = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0
+    return player:usedSkillTimes(self.name) == 0 and player:getMark("@mini_beijia") ~= 0
   end,
   enabled_at_response = function (self, player, response)
-    if player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0 and not response then
+    if player:usedSkillTimes(self.name) == 0 and player:getMark("@mini_beijia") ~= 0 and not response then
       if player:getSwitchSkillState("mini_beijia", false) == fk.SwitchYang then
         return Exppattern:Parse(Fk.currentResponsePattern):matchExp(".|.|.|.|.|trick|.")
       else
@@ -2332,7 +2332,7 @@ local mini_beijia_record = fk.CreateTriggerSkill{
     local room = player.room
     local last_num = player:getMark("@mini_beijia")
     if player.phase == Player.Play and last_num == data.card.number then
-      changeRhyme(room, player, "mini_beijia", Player.HistoryPhase)
+      changeRhyme(room, player, "mini_beijia", Player.HistoryTurn)
     end
     room:setPlayerMark(player, "@mini_beijia", math.max(data.card.number, 0))
   end,
@@ -2374,6 +2374,19 @@ local mini_sifu = fk.CreateActiveSkill{
   end,
   target_num = 0,
   card_num = 0,
+  times = function(self)
+    if Self.phase == Player.Play then
+      local x = 0
+      if Self:getMark("mini_sifu_choice1-phase") == 0 then
+        x = x + 1
+      end
+      if Self:getMark("mini_sifu_choice2-phase") == 0 then
+        x = x + 1
+      end
+      return x
+    end
+    return -1
+  end,
   card_filter = Util.FalseFunc,
   can_use = function (self, player)
     return player:getMark("mini_sifu_choice1-phase") == 0 or player:getMark("mini_sifu_choice2-phase") == 0
