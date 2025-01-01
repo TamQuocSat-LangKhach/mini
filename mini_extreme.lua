@@ -1650,7 +1650,7 @@ local juxian = fk.CreateTriggerSkill{
   events = {fk.AfterCardsMove},
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) or player.room.current ~= player then return false end
+    if not player:hasSkill(self) or player:getMark("mini_juxian-turn") > 2 or player.room.current ~= player then return false end
     local room = player.room
     local to_get = {}
     local move_event = room.logic:getCurrentEvent()
@@ -1692,8 +1692,15 @@ local juxian = fk.CreateTriggerSkill{
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
+    local room = player.room
     local cards = self.cost_data
-    player.room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
+    local x = player:getMark("mini_juxian-turn")
+    if x >= 3 then return false end
+    if #cards + x > 3 then
+      cards = table.random(cards, 3-x)
+    end
+    room:addPlayerMark(player, "mini_juxian-turn", #cards)
+    room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
   end,
 }
 
@@ -1702,7 +1709,7 @@ local xianshi = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   anim_type = "control",
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and target.phase == Player.Draw
+    return player:hasSkill(self) and target.phase == Player.Draw and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -1721,9 +1728,9 @@ Fk:loadTranslationTable{
   ["mini_wangzuo"] = "王佐",
   [":mini_wangzuo"] = "每回合限一次，你可跳过摸牌阶段、出牌阶段或弃牌阶段，然后令一名其他角色执行一个对应的额外阶段。<br><font color='red'><small>不要报告和此技能有关的，如与阶段、回合有关的bug。</small></font>",
   ["mini_juxian"] = "举贤",
-  [":mini_juxian"] = "你的回合内，当其他角色的牌因使用、打出或弃置而进入弃牌堆后，你获得之。",
+  [":mini_juxian"] = "你的回合内，当其他角色的牌因使用、打出或弃置而进入弃牌堆后，你获得之（至多为3）。",
   ["mini_xianshi"] = "先识",
-  [":mini_xianshi"] = "一名角色的摸牌阶段开始时，你可观看牌堆顶的三张牌并用任意张手牌交换其中等量张牌。",
+  [":mini_xianshi"] = "每轮限一次，一名角色的摸牌阶段开始时，你可观看牌堆顶的三张牌并用任意张手牌交换其中等量张牌。",
 
   ["#mini_wangzuo-ask"] = "你可以发动〖王佐〗，跳过 %arg，选择一名其他角色，令其执行 %arg",
   ["#mini_xianshi-exchange"] = "先识：观看牌堆顶的三张牌并用任意张手牌交换",
@@ -1867,6 +1874,8 @@ local taoni = fk.CreateTriggerSkill{
     local room = player.room
     room:loseHp(player, num, self.name)
     if player.dead then return end
+    room:drawCards(player, num, self.name)
+    if player.dead then return end
     local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p) return p:getMark("@@mini_taoni") == 0 end), Util.IdMapper)
     if #targets > 0 then
       local tos = room:askForChoosePlayers(player, targets, 1, num, "#mini_taoni-choose:::" .. num, self.name, false)
@@ -1983,7 +1992,8 @@ miniex__sunce:addSkill(dingye)
 Fk:loadTranslationTable{
   ["miniex__sunce"] = "极孙策",
   ["mini_taoni"] = "讨逆",
-  [":mini_taoni"] = "出牌阶段开始时，你可失去任意点体力，然后令至多X名没有“讨逆”的其他角色各获得1枚“讨逆”，然后此回合你的手牌上限为你的体力上限。",
+  [":mini_taoni"] = "出牌阶段开始时，你可失去任意点体力，摸等量的牌，"..
+  "然后令至多X名没有“讨逆”的其他角色各获得1枚“讨逆”（X为你以此法失去的体力值），此回合你的手牌上限为你的体力上限。",
   ["mini_pingjiang"] = "平江",
   [":mini_pingjiang"] = "出牌阶段，你可选择一名有“讨逆”的角色，弃其“讨逆”，视为对其使用【决斗】。" ..
   "若其受到了此【决斗】的伤害，你此回合使用的【决斗】目标角色需要打出【杀】的数量+1，对目标角色造成的伤害+1；否则此技能此回合失效。",
@@ -2263,7 +2273,7 @@ local mini_beijia = fk.CreateViewAsSkill{
     local all_names = U.getAllCardNames(Self:getSwitchSkillState("mini_beijia", false) == fk.SwitchYang and "t" or "b")
     local names = U.getViewAsCardNames(Self, "mini_beijia", all_names)
     if #names > 0 then
-      return U.CardNameBox { choices = names, all_choices = all_names }
+      return U.CardNameBox { choices = names, all_choices = all_names, default_choice = "AskForCardsChosen" }
     end
   end,
   enabled_at_play = function(self, player)
@@ -2273,7 +2283,7 @@ local mini_beijia = fk.CreateViewAsSkill{
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player:getMark("@mini_beijia") ~= 0 and not response
   end,
   card_filter = function(self, to_select, selected)
-    if #selected == 0 then
+    if #selected == 0 and Fk.all_card_types[self.interaction.data] ~= nil then
       local number = Self:getMark("@mini_beijia")
       if Self:getSwitchSkillState(self.name, false) == fk.SwitchYang then
         return Fk:getCardById(to_select).number > number
@@ -2283,7 +2293,7 @@ local mini_beijia = fk.CreateViewAsSkill{
     end
   end,
   view_as = function (self, cards)
-    if #cards ~= 1 or not self.interaction.data then return end
+    if #cards ~= 1 or Fk.all_card_types[self.interaction.data] == nil then return end
     local c = Fk:cloneCard(self.interaction.data)
     c.skillName = self.name
     c:addSubcard(cards[1])
@@ -2309,7 +2319,7 @@ local mini_beijia_record = fk.CreateTriggerSkill{
 
   refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill("mini_beijia")
+    return target == player and player:hasSkill(mini_beijia, true)
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
@@ -2326,45 +2336,113 @@ local mini_sifu = fk.CreateActiveSkill{
   name = "mini_sifu",
   prompt = "#mini_sifu-active",
   anim_type = "drawcard",
+  interaction = function()
+    local numbers = { {}, {} }
+    local record = Self:getTableMark("mini_sifu_record-turn")
+    for i = 1, 13, 1 do
+      if table.contains(record, i) then
+        table.insert(numbers[1], i)
+      else
+        table.insert(numbers[2], i)
+      end
+    end
+    local area_names = { "mini_sifu_used", "mini_sifu_non_used" }
+
+    if Self:getMark("mini_sifu_choice2-phase") > 0 then
+      table.remove(numbers, 2)
+      table.remove(area_names, 2)
+    end
+
+    if Self:getMark("mini_sifu_choice1-phase") > 0 then
+      table.remove(numbers, 1)
+      table.remove(area_names, 1)
+    end
+
+    return {
+      type = "custom",
+      qml_path = "packages/mini/qml/SiFuInteraction",
+      numbers = numbers,
+      area_names = area_names,
+    }
+  end,
   target_num = 0,
   card_num = 0,
   card_filter = Util.FalseFunc,
   can_use = function (self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:getMark("mini_sifu_choice1-phase") == 0 or player:getMark("mini_sifu_choice2-phase") == 0
+  end,
+  feasible = function(self)
+    return tonumber(self.interaction.data)
   end,
   on_use = function (self, room, effect)
     local player = room:getPlayerById(effect.from)
-    local nums = {}
-    room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
-      local use = e.data[1]
-      if use and use.from == player.id and use.card.number > 0 then
-        table.insertIfNeed(nums, use.card.number)
-      end
-      return false
-    end, Player.HistoryTurn)
-    local _nums = table.concat(nums, ",")
-    local cards = room:getCardsFromPileByRule(".|" .. _nums)
-    table.insertTable(cards, room:getCardsFromPileByRule(".|^(" .. _nums .. ")"))
+    if table.contains(player:getTableMark("mini_sifu_record-turn"), tonumber(self.interaction.data)) then
+      room:setPlayerMark(player, "mini_sifu_choice1-phase", 1)
+    else
+      room:setPlayerMark(player, "mini_sifu_choice2-phase", 1)
+    end
+
+    local cards = room:getCardsFromPileByRule(".|" .. self.interaction.data)
     if #cards > 0 then
       room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
     end
-  end
+  end,
+
+  on_acquire = function (self, player, is_start)
+    local room = player.room
+    if room.current ~= player then return end
+    local turn = room.logic:getCurrentEvent():findParent(GameEvent.Turn, true)
+    if turn == nil then return end
+    local nums = {}
+    room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
+      local use = e.data[1]
+      if use.from == player.id then
+        table.insertIfNeed(nums, use.card.number)
+      end
+    end, turn.id)
+    if #nums > 0 then
+      room:setPlayerMark(player, "mini_sifu_record-turn", nums)
+    end
+  end,
+  on_lose = function (self, player, is_death)
+    local room = player.room
+    room:setPlayerMark(player, "mini_sifu_choice1-phase", 0)
+    room:setPlayerMark(player, "mini_sifu_choice2-phase", 0)
+  end,
 }
+
+local mini_sifu_record = fk.CreateTriggerSkill{
+  name = "#mini_sifu_record",
+
+  refresh_events = {fk.CardUsing},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(mini_sifu, true) and
+    player.room.current == player and player.phase ~= Player.NotActive
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:addTableMarkIfNeed(player, "mini_sifu_record-turn", data.card.number)
+  end,
+}
+mini_sifu:addRelatedSkill(mini_sifu_record)
+
 miniex__caiwenji:addSkill(mini_beijia)
 miniex__caiwenji:addSkill(mini_sifu)
 
 Fk:loadTranslationTable{
   ["miniex__caiwenji"] = "极蔡文姬",
   ["mini_beijia"] = "悲笳",
-  [":mini_beijia"] = "<a href='rhyme_skill'>韵律技</a>，每回合限一次，平：你可将一张点数大于X的牌当任意普通锦囊牌使用；仄："..
-  "你可将一张点数小于X的牌当任意基本牌使用。<br>转韵：出牌阶段，使用一张点数等于X的牌（X为你使用的上一张牌的点数）。",
+  [":mini_beijia"] = "<a href='rhyme_skill'>韵律技</a>，每回合限一次，平：你可以将一张点数大于X的牌当任意普通锦囊牌使用；仄："..
+  "你可以将一张点数小于X的牌当任意基本牌使用。<br>转韵：出牌阶段，使用一张点数等于X的牌（X为你使用的上一张牌的点数）。",
   ["mini_sifu"] = "思赋",
-  [":mini_sifu"] = "出牌阶段限一次，你可从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张。",
+  [":mini_sifu"] = "出牌阶段各限一次，你可以选择一个本回合你使用/未使用过的牌的点数，然后从牌堆里随机获得一张该点数的牌。",
 
   ["@mini_beijia"] = "悲笳",
   ["#mini_beijia-level"] = "悲笳（平）：你可将一张点数大于%arg的牌当任意普通锦囊牌使用",
   ["#mini_beijia-oblique"] = "悲笳（仄）：你可将一张点数小于%arg的牌当任意基本牌使用",
-  ["#mini_sifu-active"] = "发动 思赋，从牌堆中随机获得你本回合使用过和未使用过的点数的牌各一张",
+  ["#mini_sifu-active"] = "发动 思赋，从牌堆中随机获得一张指定点数的牌",
+  ["mini_sifu_choice"] = "选择点数",
+  ["mini_sifu_used"] = "已使用",
+  ["mini_sifu_non_used"] = "未使用",
 
   ["$mini_beijia1"] = "干戈日寻兮道路危，民卒流亡兮共哀悲。",
   ["$mini_beijia2"] = "烟尘蔽野兮胡虏盛，志意乖兮节义亏。",
