@@ -1212,7 +1212,7 @@ local hongtu = fk.CreateActiveSkill{
       local card = Fk:cloneCard("archery_attack")
       if not U.canUseCard(room, winner, card) then return end
       local tos = table.map(table.filter(room.alive_players, function(p)
-        return U.canUseCardTo(room, winner, p, card)
+        return winner:canUseTo(card, p, { bypass_times = true, bypass_distances = true })
       end), Util.IdMapper)
       local use = { ---@type CardUseStruct
         from = winner.id,
@@ -1907,7 +1907,7 @@ local pingjiang = fk.CreateActiveSkill{
     if target:getMark("@@mini_taoni") > 0 then
       local card = Fk:cloneCard("duel")
       card.skillName = self.name
-      return U.canUseCardTo(Fk:currentRoom(), Self, target, card)
+      return Self:canUseTo(card, target, { bypass_times = true, bypass_distances = true })
     end
   end,
   card_num = 0,

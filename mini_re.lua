@@ -946,7 +946,7 @@ local danlao = fk.CreateActiveSkill{
     local card = Fk:cloneCard("slash")
     card.skillName = self.name
     for _, p in ipairs(room:getAlivePlayers()) do
-      if not (player.dead or p.dead or #ret[p.id] > 0) and U.canUseCardTo(room, p, player, card) then
+      if not (player.dead or p.dead or #ret[p.id] > 0) and p:canUseTo(card, player, { bypass_times = true, bypass_distances = true }) then
         if room:askForChoice(p, {"mini__danlao-slash::" .. player.id, "Cancel"}, self.name):startsWith("mi") then
           room:useVirtualCard("slash", nil, p, player, self.name, true)
         end
