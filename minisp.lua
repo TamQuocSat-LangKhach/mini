@@ -234,7 +234,7 @@ local sixiao = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.GameStart then
-      local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
+      local targets = table.map(room:getOtherPlayers(player, false), Util.IdMapper)
       if #targets > 0 then
         local tos = room:askForChoosePlayers(player, targets, 1, 1, "#sixiao-choose", self.name, false)
         if #tos > 0 then
@@ -307,7 +307,7 @@ local sixiao = fk.CreateTriggerSkill{
   on_refresh = function (self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(player:getMark("sixiao_to"))
-    if to and table.every(room:getOtherPlayers(player), function (p)
+    if to and table.every(room:getOtherPlayers(player, false), function (p)
       return p:getMark("sixiao_to") ~= to.id
     end) then
       room:handleAddLoseSkills(to, "-sixiao_other&", nil, false, true)

@@ -108,23 +108,16 @@ local mini_xiangzhi = fk.CreateActiveSkill{
       end
     end
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     if player:getSwitchSkillState("mini_xiangzhi", false) == fk.SwitchYang then
       player:drawCards(1, self.name)
       for _, p in ipairs(room:getOtherPlayers(player)) do
-        if p:getMark("@@mini_xiangzhi") ~= 0 then
-          local mark = p:getMark("@@mini_xiangzhi")
-          if table.contains(mark, player.id) then
-            room:doIndicate(player.id, {p.id})
-            p:drawCards(1, self.name)
-            table.removeOne(mark, player.id)
-            if #mark == 0 then mark = 0 end
-            room:setPlayerMark(p, "@@mini_xiangzhi", mark)
-          end
+        if table.contains(p:getTableMark("@@mini_xiangzhi"), player.id) and p:isAlive() then
+          room:doIndicate(player.id, {p.id})
+          p:drawCards(1, self.name)
+          room:removeTableMark(p, "@@mini_xiangzhi", player.id)
         end
       end
     else
@@ -135,22 +128,17 @@ local mini_xiangzhi = fk.CreateActiveSkill{
         skillName = self.name
       })
       for _, p in ipairs(room:getOtherPlayers(player)) do
-        if p:getMark("@@mini_xiangzhi") ~= 0 then
-          local mark = p:getMark("@@mini_xiangzhi")
-          if table.contains(mark, player.id) then
-            room:doIndicate(player.id, {p.id})
-            if p:isWounded() then
-              room:recover({
-                who = p,
-                num = 1,
-                recoverBy = player,
-                skillName = self.name
-              })
-            end
-            table.removeOne(mark, player.id)
-            if #mark == 0 then mark = 0 end
-            room:setPlayerMark(p, "@@mini_xiangzhi", mark)
+        if table.contains(p:getTableMark("@@mini_xiangzhi"), player.id) and p:isAlive() then
+          room:doIndicate(player.id, {p.id})
+          if p:isWounded() then
+            room:recover({
+              who = p,
+              num = 1,
+              recoverBy = player,
+              skillName = self.name
+            })
           end
+          room:removeTableMark(p, "@@mini_xiangzhi", player.id)
         end
       end
     end
@@ -172,14 +160,7 @@ local mini_xiangzhi_record = fk.CreateTriggerSkill{
   on_refresh = function(self, event, target, player, data)
     local room = player.room
     for _, p in ipairs(room.alive_players) do
-      if p:getMark("@@mini_xiangzhi") ~= 0 then
-        local mark = p:getMark("@@mini_xiangzhi")
-        if table.contains(mark, player.id) then
-          table.removeOne(mark, player.id)
-          if #mark == 0 then mark = 0 end
-          room:setPlayerMark(p, "@@mini_xiangzhi", mark)
-        end
-      end
+      room:removeTableMark(p, "@@mini_xiangzhi", player.id)
     end
   end,
 }
@@ -583,7 +564,7 @@ local zhuixi = fk.CreateTriggerSkill{
     local room = player.room
     local slash = Fk:cloneCard("slash")
     local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
+    for _, p in ipairs(room:getOtherPlayers(player, false)) do
       if not player:isProhibited(p, slash) then
         table.insert(targets, p.id)
       end
@@ -1095,7 +1076,7 @@ local duoquan = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
+    local targets = table.map(room:getOtherPlayers(player, false), Util.IdMapper)
     local tos = room:askForChoosePlayers(player, targets, 1, 1, "#mini_duoquan", self.name, true, true)
     if #tos > 0 then
       self.cost_data = tos[1]

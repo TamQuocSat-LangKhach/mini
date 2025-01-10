@@ -108,7 +108,7 @@ local shensu = fk.CreateTriggerSkill{
     local slash = Fk:cloneCard("slash")
     local max_num = slash.skill:getMaxTargetNum(player, slash)
     local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
+    for _, p in ipairs(room:getOtherPlayers(player, false)) do
       if not player:isProhibited(p, slash) then
         table.insert(targets, p.id)
       end
@@ -515,7 +515,7 @@ local mini__tianfa = fk.CreateTriggerSkill{
   on_cost = function (self, event, target, player, data)
     if event == fk.CardUseFinished then return true end
     local n = player:getMark("@mini__punish-turn")
-    local tos = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, n, "#mini__tianfa-choose:::"..n, self.name, true)
+    local tos = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player, false), Util.IdMapper), 1, n, "#mini__tianfa-choose:::"..n, self.name, true)
     if #tos > 0 then
       self.cost_data = tos
       return true
