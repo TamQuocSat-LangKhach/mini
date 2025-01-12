@@ -763,36 +763,56 @@ local mini__qiangwu = fk.CreateActiveSkill{
   anim_type = "offensive",
   card_num = 1,
   target_num = 0,
+  prompt = "#mini__qiangwu",
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand and not Self:prohibitDiscard(to_select)
+    return #selected == 0 and not Self:prohibitDiscard(to_select)
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
+    player:broadcastSkillInvoke("qiangwu")
+    local num = Fk:getCardById(effect.cards[1]).number
     room:throwCard(effect.cards, self.name, player, player)
-    room:setPlayerMark(player, "@mini__qiangwu-turn", Fk:getCardById(effect.cards[1]).number)
+    if player.dead then return end
+    room:setPlayerMark(player, "@mini__qiangwu-turn", num)
   end,
 }
 local mini__qiangwu_buff = fk.CreateTargetModSkill{
   name = "#mini__qiangwu_buff",
-  residue_func = function(self, player, skill, scope, card)
-    return (player:getMark("@mini__qiangwu-turn") ~= 0 and skill.trueName == "slash_skill" and card.number > player:getMark("@mini__qiangwu-turn") and scope == Player.HistoryPhase) and 998 or 0
+  bypass_times = function (self, player, skill, scope, card, to) -- 存疑哈，懒得求证算都有好了
+    return player:getMark("@mini__qiangwu-turn") ~= 0 and card and card.trueName == "slash"
+    and card.number > player:getMark("@mini__qiangwu-turn")
   end,
-  distance_limit_func = function(self, player, skill, card)
-    return (player:getMark("@mini__qiangwu-turn") ~= 0 and skill.trueName == "slash_skill" and card.number > player:getMark("@mini__qiangwu-turn")) and 998 or 0
+  bypass_distances = function (self, player, skill, card, to)
+    return player:getMark("@mini__qiangwu-turn") ~= 0 and card and card.trueName == "slash"
+    and card.number > player:getMark("@mini__qiangwu-turn")
+  end,
+}
+local mini__qiangwu_trigger = fk.CreateTriggerSkill{
+  name = "#mini__qiangwu_trigger",
+  refresh_events = {fk.PreCardUse},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:getMark("@mini__qiangwu-turn") ~= 0 and data.card.trueName == "slash"
+    and data.card.number > player:getMark("@mini__qiangwu-turn")
+  end,
+  on_refresh = function(self, event, target, player, data)
+    data.extraUse = true
   end,
 }
 mini__qiangwu:addRelatedSkill(mini__qiangwu_buff)
+mini__qiangwu:addRelatedSkill(mini__qiangwu_trigger)
 zhangxingcai:addSkill(mini__shenxian)
 zhangxingcai:addSkill(mini__qiangwu)
 Fk:loadTranslationTable{
   ["mini__zhangxingcai"] = "张星彩",
+  ["#mini__zhangxingcai"] = "敬哀皇后",
   ["mini__shenxian"] = "甚贤",
   [":mini__shenxian"] = "当有角色因弃置而失去基本牌后，你可以摸一张牌。",
   ["mini__qiangwu"] = "枪舞",
-  [":mini__qiangwu"] = "出牌阶段限一次，你可以弃置一张手牌，然后本回合你使用点数大于弃置牌的【杀】不计入次数且无距离限制。",
+  [":mini__qiangwu"] = "出牌阶段限一次，你可以弃置一张牌。若如此做，直到回合结束，你使用点数大于此牌的【杀】不计入次数限制且无距离限制。",
+  ["#mini__qiangwu"] = "枪舞：你可弃置一张牌：点数大于此牌的【杀】不计入次数、无距离限制",
 
   ["@mini__qiangwu-turn"] = "枪舞",
 }

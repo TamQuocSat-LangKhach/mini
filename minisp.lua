@@ -344,7 +344,7 @@ Fk:loadTranslationTable{
   ["~wangrong"] = "自阮，嵇云亡，为世所羁，实有所叹。",
 }
 
-local xiangxiu = General(extension, "xiangxiu", "wei", 3, 3, General.Female)
+local xiangxiu = General(extension, "xiangxiu", "wei", 3)
 
 local miaoxi = fk.CreateActiveSkill{
   name = "miaoxi",
