@@ -781,10 +781,6 @@ local mini__qiangwu = fk.CreateActiveSkill{
 }
 local mini__qiangwu_buff = fk.CreateTargetModSkill{
   name = "#mini__qiangwu_buff",
-  bypass_times = function (self, player, skill, scope, card, to) -- 存疑哈，懒得求证算都有好了
-    return player:getMark("@mini__qiangwu-turn") ~= 0 and card and card.trueName == "slash"
-    and card.number > player:getMark("@mini__qiangwu-turn")
-  end,
   bypass_distances = function (self, player, skill, card, to)
     return player:getMark("@mini__qiangwu-turn") ~= 0 and card and card.trueName == "slash"
     and card.number > player:getMark("@mini__qiangwu-turn")
@@ -811,7 +807,7 @@ Fk:loadTranslationTable{
   ["mini__shenxian"] = "甚贤",
   [":mini__shenxian"] = "当有角色因弃置而失去基本牌后，你可以摸一张牌。",
   ["mini__qiangwu"] = "枪舞",
-  [":mini__qiangwu"] = "出牌阶段限一次，你可以弃置一张牌。若如此做，直到回合结束，你使用点数大于此牌的【杀】不计入次数限制且无距离限制。",
+  [":mini__qiangwu"] = "出牌阶段限一次，你可以弃置一张牌。若如此做，直到回合结束，你使用点数大于此牌的【杀】不计入次数且无距离限制。",
   ["#mini__qiangwu"] = "枪舞：你可弃置一张牌：点数大于此牌的【杀】不计入次数、无距离限制",
 
   ["@mini__qiangwu-turn"] = "枪舞",
