@@ -1949,6 +1949,7 @@ local dingye = fk.CreateTriggerSkill{
       table.insertIfNeed(targets, damage.to.id)
       return false
     end)
+    table.removeOne(targets, player.id)
     if #targets > 0 then
       self.cost_data = #targets
       return true
@@ -1979,7 +1980,7 @@ Fk:loadTranslationTable{
   [":mini_pingjiang"] = "出牌阶段，你可选择一名有“讨逆”的角色，弃其“讨逆”，视为对其使用【决斗】。" ..
   "若其受到了此【决斗】的伤害，你此回合使用的【决斗】目标角色需要打出【杀】的数量+1，对目标角色造成的伤害+1；否则此技能此回合失效。",
   ["mini_dingye"] = "鼎业",
-  [":mini_dingye"] = "结束阶段，你回复X点体力。（X为此回合受到过伤害的角色数）",
+  [":mini_dingye"] = "结束阶段，你回复X点体力。（X为此回合受到过伤害的其他角色数）",
 
   ["#mini_taoni-invoke"] = "你可以发动〖讨逆〗，失去任意点体力，摸等量张牌，然后令至多等量名角色获得“讨逆”",
   ["#mini_taoni-choose"] = "讨逆：选择至多%arg名角色获得“讨逆”",
