@@ -260,7 +260,7 @@ local sixiao = fk.CreateTriggerSkill{
             return false
           end
         end
-        return not target:isProhibited(p, card) and card.skill:modTargetFilter(p.id, {}, target.id, card, true)
+        return not target:isProhibited(p, card) and card.skill:modTargetFilter(p.id, {}, target, card, true)
       end
       local findCardTarget = function(card)
         local tos = {}

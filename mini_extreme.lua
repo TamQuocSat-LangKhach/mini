@@ -820,7 +820,7 @@ local miaobi = fk.CreateTriggerSkill{
             for _, cid in ipairs(cards) do
               local card = Fk:getCardById(cid)
               if from:canUse(card) and not from:prohibitUse(card) and not from:isProhibited(player, card) and
-                  (card.skill:modTargetFilter(player.id, {}, from.id, card, false)) then
+                  (card.skill:modTargetFilter(player.id, {}, from, card, false)) then
                 local tos = { {player.id} }
                 if card.skill:getMinTargetNum() == 2 then
                   local targets = table.filter(room.alive_players, function (p)
