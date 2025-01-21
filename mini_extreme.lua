@@ -824,7 +824,7 @@ local miaobi = fk.CreateTriggerSkill{
                 local tos = { {player.id} }
                 if card.skill:getMinTargetNum() == 2 then
                   local targets = table.filter(room.alive_players, function (p)
-                    return card.skill:targetFilter(p.id, {player.id}, {}, card)
+                    return player ~= p and card.skill:targetFilter(p.id, {player.id}, {}, card, nil, from)
                   end)
                   if #targets > 0 then
                     local to_slash = room:askForChoosePlayers(from, table.map(targets, Util.IdMapper), 1, 1, "#mini_miaobi-choose::"..player.id..":"..card:toLogString(), self.name, false)
