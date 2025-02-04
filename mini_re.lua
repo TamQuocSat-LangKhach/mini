@@ -136,7 +136,6 @@ local shensu = fk.CreateTriggerSkill{
       card = slash,
       extraUse = true,
     })
-    return true
   end,
 
   refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
@@ -172,7 +171,7 @@ xiahouyuan:addSkill(shensu)
 Fk:loadTranslationTable{
   ["mini__xiahouyuan"] = "夏侯渊",
   ["mini__shensu"] = "神速",
-  [":mini__shensu"] = "①判定阶段开始前，你可跳过此阶段和摸牌阶段来视为使用无视防具的普【杀】。②出牌阶段开始前，你可跳过此阶段来视为使用无视防具的普【杀】。",
+  [":mini__shensu"] = "①判定阶段开始前，你可跳过此阶段和摸牌阶段来视为使用无视防具的【杀】。②出牌阶段开始前，你可跳过此阶段来视为使用无视防具的【杀】。",
 
   ["#mini__shensu1-choose"] = "神速：你可以跳过判定阶段和摸牌阶段，视为使用一张无距离限制、无视防具的【杀】",
   ["#mini__shensu2-choose"] = "神速：你可以跳过出牌阶段，视为使用一张无距离限制、无视防具的【杀】",

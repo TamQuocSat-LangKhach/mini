@@ -210,7 +210,12 @@ local sixiao_other = fk.CreateActiveSkill{
     room:notifySkillInvoked(to, "sixiao")
     room:doIndicate(player.id, {to.id})
     local cards = to:getCardIds("h")
-    local use = U.askForUseRealCard(room, player, cards, ".", self.name, nil, {expand_pile = cards, bypass_times = false, extraUse = false})
+    local use = room:askForUseRealCard(player, cards, self.name, nil,
+      {
+        expand_pile = cards,
+        bypass_times = false,
+        extraUse = false,
+      })
     if use and not to.dead then
       to:drawCards(1, "sixiao")
     end
