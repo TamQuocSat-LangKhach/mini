@@ -2572,8 +2572,7 @@ local gujin = fk.CreateTriggerSkill{
     if not player:hasSkill(self) or player:getMark("@mini_moulue") >= 5 then return end
     return #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
       local use = e.data[1]
-      return use.from ~= player.id and use.tos and
-        table.contains(TargetGroup:getRealTargets(use.tos), player.id)
+      return use.from ~= player.id and table.contains(TargetGroup:getRealTargets(use.tos), player.id)
     end, Player.HistoryTurn) == 0
   end,
   on_use = function(self, event, target, player, data)
@@ -3052,17 +3051,159 @@ Fk:loadTranslationTable{
   ["#mini__qiangji-choice"] = "强忌：猜测 %dest 手牌中最多的花色，若猜对，对其造成1点伤害",
 }
 
+local chengong = General(extension, "miniex__chengong", "qun", 3)
 Fk:loadTranslationTable{
   ["miniex__chengong"] = "极陈宫",
 }
+local zuoqing = fk.CreateActiveSkill{
+  name = "mini__zuoqing",
+  anim_type = "support",
+  card_num = 0,
+  target_num = 1,
+  prompt = "#mini__zuoqing",
+  interaction = function(self, player)
+    local choices = {"loseHp"}
+    if #player:getCardIds("e") > 0 then
+      table.insert(choices, "mini__zuoqing_discard")
+    end
+    return UI.ComboBox { choices = choices, all_choices = {"loseHp", "mini__zuoqing_discard"} }
+  end,
+  can_use = Util.TrueFunc,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected, _, _, _, player)
+    return #selected == 0 and not table.contains(player:getTableMark("mini__zuoqing-phase"), to_select)
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:addTableMark(player, "mini__zuoqing-phase", target.id)
+    if self.interaction.data == "loseHp" then
+      room:loseHp(player, 1, self.name)
+    else
+      room:throwCard(player:getCardIds("e"), self.name, player, player)
+    end
+    if target.dead then return end
+    local choice = room:askForChoice(target, {"mini__zuoqing_use", "mini__zuoqing_response"}, self.name)
+    local n = math.max(1, player:getLostHp())
+    room:setPlayerMark(target, "@"..choice, n)
+  end,
+}
+local zuoqing_trigger = fk.CreateTriggerSkill{
+  name = "#mini__zuoqing_trigger",
+  anim_type = "drawcard",
+  events = {fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and data.card.trueName == "slash" and player:getMark("@mini__zuoqing_use") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    player:drawCards(1, "mini__zuoqing")
+    player.room:removePlayerMark(player, "@mini__zuoqing_use", 1)
+  end,
+}
+local zuoqing_trigger2 = fk.CreateTriggerSkill{
+  name = "#mini__zuoqing_trigger2",
+  anim_type = "drawcard",
+  events = {fk.CardResponding},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and data.card.trueName == "slash" and player:getMark("@mini__zuoqing_response") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    player:drawCards(1, "mini__zuoqing")
+    player.room:removePlayerMark(player, "@mini__zuoqing_response", 1)
+  end,
+}
+zuoqing:addRelatedSkill(zuoqing_trigger)
+zuoqing:addRelatedSkill(zuoqing_trigger2)
+chengong:addSkill(zuoqing)
 Fk:loadTranslationTable{
   ["mini__zuoqing"] = "佐卿",
-  [":mini__zuoqing"] = "出牌阶段每名角色限一次，你可以失去1点体力或弃置装备区内所有装备牌（至少一张），然后令一名角色选择其接下来"..
-  "使用或打出前X张【杀】时摸一张牌（X为你已损失体力值且至少为1）。",
+  [":mini__zuoqing"] = "出牌阶段每名角色限一次，你可以失去1点体力或弃置装备区内所有装备牌（至少一张），令一名角色选择其接下来"..
+  "1.使用；2.打出前X张【杀】时摸一张牌（X为你已损失体力值且至少为1）。",
+  ["#mini__zuoqing"] = "佐卿：失去1点体力或弃置装备，令一名角色接下来使用或打出杀时摸一张牌",
+  ["mini__zuoqing_discard"] = "弃置所有装备",
+  ["mini__zuoqing_use"] = "使用【杀】时摸一张牌",
+  ["mini__zuoqing_response"] = "打出【杀】时摸一张牌",
+  ["@mini__zuoqing_use"] = "使用杀摸牌",
+  ["@mini__zuoqing_response"] = "打出杀摸牌",
+  ["#mini__zuoqing_trigger"] = "佐卿",
+  ["#mini__zuoqing_trigger2"] = "佐卿",
 }
+local jianchou = fk.CreateTriggerSkill{
+  name = "mini__jianchou",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  times = function(self)
+    return 2 - Self:usedSkillTimes(self.name, Player.HistoryRound)
+  end,
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and data.card and table.contains({"slash", "duel"}, data.card.trueName) and
+      not target.dead and player:usedSkillTimes(self.name, Player.HistoryRound) < 2 and
+      data.from and data.from ~= target and not data.from.dead
+  end,
+  on_cost = function(self, event, target, player, data)
+    if player.room:askForSkillInvoke(player, self.name, nil, "#mini__jianchou-invoke:"..target.id..":"..data.from.id) then
+      self.cost_data = {tos = {target.id}}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local use_event = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+    if use_event then
+      local use = use_event.data[1]
+      use.extra_data = use.extra_data or {}
+      use.extra_data.mini__jianchou = use.extra_data.mini__jianchou or {}
+      table.insert(use.extra_data.mini__jianchou, {
+        from = target,
+        to = data.from,
+      })
+    end
+  end,
+}
+local jianchou_delay = fk.CreateTriggerSkill{
+  name = "#mini__jianchou_delay",
+  anim_type = "offensive",
+  events = {fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    if data.extra_data and data.extra_data.mini__jianchou then
+      if player.dead then return end
+      for _, info in ipairs(data.extra_data.mini__jianchou) do
+        if info.from == player and not info.to.dead then
+          local card = Fk:cloneCard("duel")
+          card.skillName = "mini__jianchou"
+          return player:canUseTo(card, info.to)
+        end
+      end
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    local new_info = {}
+    for i = #data.extra_data.mini__jianchou, 1, -1 do
+      local info = data.extra_data.mini__jianchou[i]
+      if info.from == player then
+        table.insert(new_info, 1, info.to)
+        table.remove(data.extra_data.mini__jianchou, i)
+      end
+    end
+    for _, to in ipairs(new_info) do
+      if player.dead then return end
+      if not to.dead then
+        room:useVirtualCard("duel", nil, player, to, "mini__jianchou")
+      end
+    end
+  end,
+}
+jianchou:addRelatedSkill(jianchou_delay)
+chengong:addSkill(jianchou)
 Fk:loadTranslationTable{
   ["mini__jianchou"] = "谏仇",
   [":mini__jianchou"] = "每轮限两次，一名角色受到【杀】或【决斗】造成的伤害后，你可以令其于此牌结算结束后，视为对伤害来源使用一张【决斗】。",
+  ["#mini__jianchou-invoke"] = "谏仇：是否令 %src 视为对 %dest 使用【决斗】？",
+  ["#mini__jianchou_delay"] = "谏仇",
 }
 
 local zhangchunhua = General(extension, "miniex__zhangchunhua", "wei", 3, 3, General.Female)
@@ -3112,7 +3253,7 @@ local qingshiz = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.CardUsing},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) and data.tos and #TargetGroup:getRealTargets(data.tos) == 1 then
+    if player:hasSkill(self) and #TargetGroup:getRealTargets(data.tos) == 1 then
       if target == player then
         return TargetGroup:getRealTargets(data.tos)[1] ~= player.id
       else
@@ -3205,17 +3346,159 @@ Fk:loadTranslationTable{
   [":mini__qingjuez"] = "限定技，当你进入濒死状态时，你可以回复体力至1点并跳过下个摸牌阶段。",
 }
 
+local zhangfei = General(extension, "miniex__zhangfei", "shu", 4)
+local hupo = fk.CreateActiveSkill{
+  name = "mini__hupo",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 1,
+  prompt = "#mini__hupo",
+  times = function(self)
+    return 1 + Self:getMark("mini__hupo_strive_times-round") - Self:usedSkillTimes(self.name, Player.HistoryRound)
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) < (1 + player:getMark("mini__hupo_strive_times-round"))
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected, _, _, _, player)
+    return #selected == 0 and to_select ~= player.id and
+      not (player:isKongcheng() and Fk:currentRoom():getPlayerById(to_select):isKongcheng())
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    if not player:isKongcheng() then
+      player:showCards(player:getCardIds("h"))
+    end
+    if not target:isKongcheng() and not target.dead then
+      target:showCards(target:getCardIds("h"))
+    end
+    if player.dead or target.dead then return end
+    local choices = {}
+    if not (player:isNude() and target:isNude()) then
+      table.insert(choices, "mini__hupo_discard")
+    end
+    local cards = table.filter(target:getCardIds("he"), function (id)
+      return not table.find(player:getCardIds("he"), function (id2)
+        return Fk:getCardById(id).trueName == Fk:getCardById(id2).trueName
+      end)
+    end)
+    if #cards > 0 then
+      table.insert(choices, "mini__hupo_prey")
+    end
+    if #choices == 0 then return end
+    local choice = room:askForChoice(player, choices, self.name)
+    if choice == "mini__hupo_discard" then
+      choices = {}
+      for _, id in ipairs(player:getCardIds("he")) do
+        if not player:prohibitDiscard(id) then
+          table.insertIfNeed(choices, Fk:getCardById(id).trueName)
+        end
+      end
+      for _, id in ipairs(target:getCardIds("he")) do
+        table.insertIfNeed(choices, Fk:getCardById(id).trueName)
+      end
+      choice = room:askForChoice(player, choices, self.name, "#mini__hupo-discard")
+      local moves = {}
+      local ids = table.filter(player:getCardIds("he"), function (id)
+        return Fk:getCardById(id).trueName == choice and not player:prohibitDiscard(id)
+      end)
+      if #ids > 0 then
+        table.insert(moves, {
+          ids = ids,
+          from = player.id,
+          toArea = Card.DiscardPile,
+          moveReason = fk.ReasonDiscard,
+          skillName = self.name,
+          proposer = player.id,
+          moveVisible = true,
+        })
+      end
+      ids = table.filter(target:getCardIds("he"), function (id)
+        return Fk:getCardById(id).trueName == choice
+      end)
+      if #ids > 0 then
+        table.insert(moves, {
+          ids = ids,
+          from = target.id,
+          toArea = Card.DiscardPile,
+          moveReason = fk.ReasonDiscard,
+          skillName = self.name,
+          proposer = player.id,
+          moveVisible = true,
+        })
+      end
+      room:moveCards(table.unpack(moves))
+    else
+      cards = U.askforChooseCardsAndChoice(player, cards, {"OK"}, self.name, "#mini__hupo-prey::"..target.id)
+      room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
+    end
+  end,
+}
+local hupoStriveSkillRecord = fk.CreateTriggerSkill{
+  name = "#mini__hupo_strive_reocrd",
+  refresh_events = {fk.Damage, fk.Damaged},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and player:getMark("#mini__hupo_strive_times-round") < 4
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room:addPlayerMark(player, "mini__hupo_strive_times-round", 1)
+  end,
+}
+hupo:addRelatedSkill(hupoStriveSkillRecord)
+zhangfei:addSkill(hupo)
 Fk:loadTranslationTable{
   ["miniex__zhangfei"] = "极张飞",
 }
 Fk:loadTranslationTable{
   ["mini__hupo"] = "虎魄",
-  [":mini__hupo"] = "奋武技，出牌阶段，你可以展示你与一名其他角色的手牌，然后你选择一项：1.弃置你与其一个牌名的所有牌；"..
-  "2.获得其一张你没有的牌名的牌。",
+  [":mini__hupo"] = "<a href='MiniStriveSkill'>奋武技</a>，出牌阶段，你可以展示你与一名其他角色的手牌，然后你选择一项："..
+  "1.弃置你与其一个牌名的所有牌；2.获得其一张你没有的牌名的牌。",
+  ["#mini__hupo"] = "虎魄：展示你与一名角色所有手牌，然后弃置其中一种牌或获得其一张牌",
+  ["mini__hupo_discard"] = "弃置双方一个牌名的所有牌",
+  ["mini__hupo_prey"] = "获得其一张你没有的牌名的牌",
+  ["#mini__hupo-discard"] = "虎魄：选择要弃置的牌名",
+  ["#mini__hupo-prey"] = "虎魄：获得 %dest 的一张牌",
 }
+local hanxing = fk.CreateTriggerSkill{
+  name = "mini__hanxing",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = {fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and
+      table.contains(TargetGroup:getRealTargets(data.tos), player.id) then
+      local events = player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
+        local use = e.data[1]
+        return use.from == player.id and table.contains(TargetGroup:getRealTargets(use.tos), player.id)
+      end, Player.HistoryTurn)
+      return events and player.room.logic:getCurrentEvent().id == events[1].id
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:addPlayerMark(player, "@mini__hanxing", 1)
+  end,
+}
+local hanxing_trigger = fk.CreateTriggerSkill{
+  name = "#mini__hanxing_trigger",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = {fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getMark("@mini__hanxing") > 0
+  end,
+  on_use = function(self, event, target, player, data)
+    data.damage = data.damage + player:getMark("@mini__hanxing")
+    player.room:setPlayerMark(player, "@mini__hanxing", 0)
+  end,
+}
+hanxing:addRelatedSkill(hanxing_trigger)
+zhangfei:addSkill(hanxing)
 Fk:loadTranslationTable{
   ["mini__hanxing"] = "酣兴",
   [":mini__hanxing"] = "锁定技，每回合你首次对自己使用牌后，你下一次造成的伤害+1。",
+  ["@mini__hanxing"] = "酣兴",
+  ["#mini__hanxing_trigger"] = "酣兴",
 }
 
 return extension
