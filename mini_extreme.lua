@@ -2010,12 +2010,12 @@ local zongxi = fk.CreateActiveSkill{
   end,
   target_filter = function(self, to_select, selected, selected_cards)
     local to = Fk:currentRoom():getPlayerById(to_select)
-    if #selected < #selected_cards and not to:isKongcheng() then
+    if #selected_cards > 0 and #selected < (#selected_cards + 1) and not to:isKongcheng() then
       return to_select == Self.id or Self:canPindian(to)
     end
   end,
   feasible = function(self, selected, selected_cards)
-    return #selected > 1 and #selected == #selected_cards
+    return #selected > 1 and #selected == (#selected_cards + 1)
   end,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
@@ -2107,7 +2107,8 @@ Fk:loadTranslationTable{
   ["miniex__sunquan"] = "极孙权",
 
   ["mini__zongxi"] = "纵阋",
-  [":mini__zongxi"] = "出牌阶段限一次，你可将至多三张牌以任意顺序置于牌堆顶，然后令X名角色进行<a href='zhuluPindian'>逐鹿</a>（X为你以此法置于牌堆的牌数），赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
+  [":mini__zongxi"] = "出牌阶段限一次，你可将至多三张牌以任意顺序置于牌堆顶，然后令X名角色进行<a href='zhuluPindian'>逐鹿</a>（X为你以此法置于牌堆的牌数+1），" ..
+  "赢的角色摸两张牌。“逐鹿”结束后，你获得其他角色的“逐鹿”牌。",
   ["#mini__zongxi"] = "纵阋：将至多三张牌置于牌堆顶，令等量名角色共同拼点",
 
   ["mini__luheng"] = "戮衡",
