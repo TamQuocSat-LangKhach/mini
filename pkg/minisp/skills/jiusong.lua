@@ -3,16 +3,17 @@ local jiusong = fk.CreateSkill {
 }
 
 Fk:loadTranslationTable{
-  ['jiusong'] = '酒颂',
-  ['#jiusong'] = '酒颂：你可将一张锦囊牌当【酒】使用',
-  ['#jiusong_trig'] = '酒颂',
-  ['@liuling_drunk'] = '醉',
-  [':jiusong'] = '①你可将一张锦囊牌当【酒】使用。②当一名角色使用【酒】时，你获得1枚“醉”。（“醉”至多3枚）',
-  ['$jiusong1'] = '大人以天地为一朝，以万期为须臾。',
-  ['$jiusong2'] = '以天为幕，以地为席！',
+  ["jiusong"] = "酒颂",
+  [":jiusong"] = "①你可将一张锦囊牌当【酒】使用。②当一名角色使用【酒】时，你获得1枚“醉”。（“醉”至多3枚）",
+
+  ["#jiusong"] = "酒颂：你可将一张锦囊牌当【酒】使用",
+  ["@liuling_drunk"] = "醉",
+
+  ["$jiusong1"] = "大人以天地为一朝，以万期为须臾。",
+  ["$jiusong2"] = "以天为幕，以地为席！",
 }
 
-jiusong:addEffect('viewas', {
+jiusong:addEffect("viewas", {
   pattern = "analeptic",
   prompt = "#jiusong",
   card_filter = function(self, player, to_select, selected)
@@ -31,21 +32,17 @@ jiusong:addEffect('viewas', {
 })
 
 jiusong:addEffect(fk.CardUsing, {
-  main_skill = jiusong,
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(jiusong) and data.card.name == "analeptic" and player:getMark("@liuling_drunk") < 3
+    return player:hasSkill(jiusong.name) and data.card.name == "analeptic" and player:getMark("@liuling_drunk") < 3
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "@liuling_drunk")
   end,
-
-  can_refresh = function (self, event, target, player, data)
-    return target == player and data == jiusong and player:getMark("@liuling_drunk") > 0
-  end,
-  on_refresh = function (self, event, target, player, data)
-    player.room:setPlayerMark(player, "@liuling_drunk", 0)
-  end,
 })
+
+jiusong:addLoseEffect(function(self, player)
+  player.room:setPlayerMark(player, "@liuling_drunk", 0)
+end)
 
 return jiusong
