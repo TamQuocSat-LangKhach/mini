@@ -1,22 +1,25 @@
-local mini_sifu = fk.CreateSkill {
+local miniSifu = fk.CreateSkill {
   name = "mini_sifu"
 }
 
 Fk:loadTranslationTable{
-  ['mini_sifu'] = '思赋',
-  ['#mini_sifu-active'] = '发动 思赋，从牌堆中随机获得一张指定点数的牌',
-  ['mini_sifu_used'] = '已使用',
-  ['mini_sifu_non_used'] = '未使用',
-  [':mini_sifu'] = '出牌阶段各限一次，你可以选择一个本回合你使用/未使用过的牌的点数，然后从牌堆里随机获得一张该点数的牌。',
-  ['$mini_sifu1'] = '云山万重兮归路遐，疾风千里兮扬尘沙。',
-  ['$mini_sifu2'] = '无日无夜兮不思我乡土，禀气合生兮莫过我最苦。',
+  ["mini_sifu"] = "思赋",
+  [":mini_sifu"] = "出牌阶段各限一次，你可以选择一个本回合你使用/未使用过的牌的点数，然后从牌堆里随机获得一张该点数的牌。",
+
+  ["#mini_sifu-active"] = "发动 思赋，从牌堆中随机获得一张指定点数的牌",
+  ["mini_sifu_used"] = "已使用",
+  ["mini_sifu_non_used"] = "未使用",
+  ["mini_sifu_choice"] = "选择点数",
+
+  ["$mini_sifu1"] = "云山万重兮归路遐，疾风千里兮扬尘沙。",
+  ["$mini_sifu2"] = "无日无夜兮不思我乡土，禀气合生兮莫过我最苦。",
 }
 
-mini_sifu:addEffect('active', {
+miniSifu:addEffect("active", {
   name = "mini_sifu",
   prompt = "#mini_sifu-active",
   anim_type = "drawcard",
-  interaction = function(player)
+  interaction = function(self, player)
     local numbers = { {}, {} }
     local record = player:getTableMark("mini_sifu_record-turn")
     for i = 1, 13, 1 do
@@ -62,56 +65,62 @@ mini_sifu:addEffect('active', {
   end,
   card_filter = Util.FalseFunc,
   can_use = function (skill, player)
-    return player:hasSkill(mini_sifu.name, true) and (player:getMark("mini_sifu_choice1-phase") == 0 or player:getMark("mini_sifu_choice2-phase") == 0)
+    return
+      player:hasSkill(miniSifu.name, true) and
+      (player:getMark("mini_sifu_choice1-phase") == 0 or player:getMark("mini_sifu_choice2-phase") == 0)
   end,
   feasible = function(self, player, selected_cards)
-    return tonumber(skill.interaction.data)
+    return tonumber(self.interaction.data)
   end,
-  on_use = function (skill, room, effect)
-    local player = room:getPlayerById(effect.from)
-    if table.contains(player:getTableMark("mini_sifu_record-turn"), tonumber(skill.interaction.data)) then
+  on_use = function (self, room, effect)
+    local player = effect.from
+    if table.contains(player:getTableMark("mini_sifu_record-turn"), tonumber(self.interaction.data)) then
       room:setPlayerMark(player, "mini_sifu_choice1-phase", 1)
     else
       room:setPlayerMark(player, "mini_sifu_choice2-phase", 1)
     end
 
-    local cards = room:getCardsFromPileByRule(".|" .. skill.interaction.data)
+    local cards = room:getCardsFromPileByRule(".|" .. self.interaction.data)
     if #cards > 0 then
-      room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, mini_sifu.name)
+      room:obtainCard(player, cards, true, fk.ReasonPrey, player, miniSifu.name)
     end
-  end,
-
-  on_acquire = function (skill, player, is_start)
-    local room = player.room
-    if room.current ~= player then return end
-    local turn = room.logic:getCurrentEvent():findParent(GameEvent.Turn, true)
-    if turn == nil then return end
-    local nums = {}
-    room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
-      local use = e.data[1]
-      if use.from == player.id then
-        table.insertIfNeed(nums, use.card.number)
-      end
-    end, turn.id)
-    if #nums > 0 then
-      room:setPlayerMark(player, "mini_sifu_record-turn", nums)
-    end
-  end,
-  on_lose = function (skill, player, is_death)
-    local room = player.room
-    room:setPlayerMark(player, "mini_sifu_choice1-phase", 0)
-    room:setPlayerMark(player, "mini_sifu_choice2-phase", 0)
   end,
 })
 
-mini_sifu:addEffect(fk.CardUsing, {
+miniSifu:addEffect(fk.CardUsing, {
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(mini_sifu.name, true) and
-      player.room.current == player and player.phase ~= Player.NotActive
+    return
+      target == player and
+      player:hasSkill(miniSifu.name, true) and
+      player.room.current == player and
+      player.phase ~= Player.NotActive
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:addTableMarkIfNeed(player, "mini_sifu_record-turn", data.card.number)
   end,
 })
 
-return mini_sifu
+miniSifu:addAcquireEffect(function(self, player)
+  local room = player.room
+  if room.current ~= player then return end
+  local turn = room.logic:getCurrentEvent():findParent(GameEvent.Turn, true)
+  if turn == nil then return end
+  local nums = {}
+  room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
+    local use = e.data
+    if use.from == player then
+      table.insertIfNeed(nums, use.card.number)
+    end
+  end, turn.id)
+  if #nums > 0 then
+    room:setPlayerMark(player, "mini_sifu_record-turn", nums)
+  end
+end)
+
+miniSifu:addLoseEffect(function(self, player)
+  local room = player.room
+  room:setPlayerMark(player, "mini_sifu_choice1-phase", 0)
+  room:setPlayerMark(player, "mini_sifu_choice2-phase", 0)
+end)
+
+return miniSifu
