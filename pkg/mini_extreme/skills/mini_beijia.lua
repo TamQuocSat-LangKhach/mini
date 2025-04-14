@@ -23,6 +23,7 @@ miniBeijia:addEffect("viewas", {
   anim_type = "control",
   card_num = 1,
   pattern = ".",
+  handly_pile = true,
   prompt = function(self, player)
     local number = player:getMark("@mini_beijia")
     if player:getSwitchSkillState(miniBeijia.name, false) == fk.SwitchYang then

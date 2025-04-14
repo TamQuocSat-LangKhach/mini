@@ -16,6 +16,7 @@ Fk:loadTranslationTable{
 jiusong:addEffect("viewas", {
   pattern = "analeptic",
   prompt = "#jiusong",
+  handly_pile = true,
   card_filter = function(self, player, to_select, selected)
     if #selected == 1 then return false end
     return Fk:getCardById(to_select).type == Card.TypeTrick

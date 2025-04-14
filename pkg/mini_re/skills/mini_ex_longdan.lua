@@ -1,14 +1,15 @@
-local longdan = fk.CreateSkill {
+local miniExLongdan = fk.CreateSkill {
   name = "mini_ex__longdan"
 }
 
 Fk:loadTranslationTable{
-  ['mini_ex__longdan'] = '龙胆',
-  [':mini_ex__longdan'] = '你可将【杀】当【闪】、【闪】当【杀】使用或打出，以此使用的【杀】不计入次数。',
+  ["mini_ex__longdan"] = "龙胆",
+  [":mini_ex__longdan"] = "你可将【杀】当【闪】、【闪】当【杀】使用或打出，以此使用的【杀】不计入次数。",
 }
 
-longdan:addEffect('viewas', {
+miniExLongdan:addEffect("viewas", {
   pattern = "slash,jink",
+  handly_pile = true,
   card_filter = function(self, player, to_select, selected)
     if #selected == 1 then return false end
     local _c = Fk:getCardById(to_select)
@@ -20,7 +21,9 @@ longdan:addEffect('viewas', {
     else
       return false
     end
-    return (Fk.currentResponsePattern == nil and player:canUse(c)) or (Exppattern:Parse(Fk.currentResponsePattern):match(c))
+    return
+      (Fk.currentResponsePattern == nil and player:canUse(c)) or
+      (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(c))
   end,
   view_as = function(self, player, cards)
     if #cards ~= 1 then
@@ -33,7 +36,7 @@ longdan:addEffect('viewas', {
     elseif _c.name == "jink" then
       c = Fk:cloneCard("slash")
     end
-    c.skillName = skill.name
+    c.skillName = miniExLongdan.name
     c:addSubcard(cards[1])
     return c
   end,
@@ -43,4 +46,4 @@ longdan:addEffect('viewas', {
   end,
 })
 
-return longdan
+return miniExLongdan

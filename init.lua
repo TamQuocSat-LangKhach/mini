@@ -4,7 +4,7 @@ local prefix = "packages.mini.pkg."
 
 local minisp = require (prefix .. "minisp")
 local mini_extreme = require (prefix .. "mini_extreme")
--- local mini_re = require (prefix .. "mini_re")
+local mini_re = require (prefix .. "mini_re")
 
 Fk:loadTranslationTable {
   ["mini"] = "小程序",
@@ -19,5 +19,5 @@ Fk:loadTranslationTable {
 return {
   minisp,
   mini_extreme,
-  -- mini_re,
+  mini_re,
 }
