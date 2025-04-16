@@ -15,10 +15,10 @@ Fk:loadTranslationTable{
 
 miniQumou:addEffect(fk.EventPhaseStart, {
   anim_type = "special",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniQumou.name) and player.phase == Player.Play
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local choice = player.room:askToChoice(
       player,
       {
@@ -32,7 +32,7 @@ miniQumou:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local type = event:getCostData(self).choice
     room:addTableMarkIfNeed(player, "mini__qumou-turn", type)

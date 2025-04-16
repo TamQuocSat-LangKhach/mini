@@ -20,11 +20,11 @@ miniShenfu:addEffect(fk.Damaged, {
   trigger_times = function(self, event, target, player, data)
     return data.damage
   end,
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(miniShenfu.name) and player:getMark("@mini_shenfu_luoshen") < 6
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, "@mini_shenfu_luoshen")
   end
@@ -35,7 +35,7 @@ miniShenfu:addEffect(fk.EventPhaseStart, {
     return target.phase == Player.Finish and target:getMark("@mini_shenfu_luoshen") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniShenfu.name
     local room = player.room

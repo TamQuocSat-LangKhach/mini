@@ -19,10 +19,10 @@ local U = require "packages/utility/utility"
 
 miniDuoquan:addEffect(fk.EventPhaseStart, {
   anim_type = "control",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniDuoquan.name) and player.phase == Player.Finish
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
     local tos = room:askToChoosePlayers(player, {
       targets = room:getOtherPlayers(player, false),
@@ -37,7 +37,7 @@ miniDuoquan:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local targetPlayer = event:getCostData(self)
     local choice = U.askforViewCardsAndChoice(
@@ -97,7 +97,7 @@ miniDuoquan:addEffect(fk.CardUsing, {
     end)
   end,
 
-  can_refresh = function(self, event, target, player)
+  can_refresh = function(self, event, target, player, data)
     return player == target and target:getMark("_mini_duoquan") ~= 0
   end,
   on_refresh = function(self, event, target, player, data)

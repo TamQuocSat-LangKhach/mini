@@ -83,11 +83,11 @@ miniMiaobi:addEffect(fk.CardUseFinished, {
 miniMiaobi:addEffect(fk.EventPhaseStart, {
   is_delay_effect = true,
   mute = true,
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return #player:getPile("mini_miaobi_penmanship") > 0 and player.phase == Player.Start
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniMiaobi.name
     local room = player.room

@@ -12,10 +12,10 @@ Fk:loadTranslationTable{
 }
 
 miniFuyin:addEffect(fk.GameStart, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(miniFuyin.name)
   end,
-  on_cost = function (self, event, target, player)
+  on_cost = function (self, event, target, player, data)
     local room = player.room
     local to = room:askToChoosePlayers(
       player,
@@ -32,7 +32,7 @@ miniFuyin:addEffect(fk.GameStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local to = event:getCostData(self).tos[1]
     room:setPlayerMark(to, "@@mini__fuyin", 1)
@@ -54,7 +54,7 @@ miniFuyin:addEffect(fk.EventPhaseChanging, {
 })
 
 miniFuyin:addEffect(fk.DrawNCards, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniFuyin.name)
   end,
   on_cost = Util.TrueFunc,
@@ -66,7 +66,7 @@ miniFuyin:addEffect(fk.DrawNCards, {
 miniFuyin:addEffect(fk.AfterDrawNCards, {
   is_delay_effect = true,
   mute = true,
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       target == player and
       player:hasSkill(miniFuyin.name, true) and
@@ -76,7 +76,7 @@ miniFuyin:addEffect(fk.AfterDrawNCards, {
       end)
   end,
   on_cost = Util.TrueFunc,
-  on_use = function (self, event, target, player)
+  on_use = function (self, event, target, player, data)
     ---@type string
     local skillName = miniFuyin.name
     local room = player.room

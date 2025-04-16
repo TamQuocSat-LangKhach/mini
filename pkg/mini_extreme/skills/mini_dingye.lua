@@ -11,7 +11,7 @@ Fk:loadTranslationTable{
 }
 
 miniDingye:addEffect(fk.EventPhaseStart, {
-  can_trigger = function (self, event, target, player)
+  can_trigger = function (self, event, target, player, data)
     if not (target == player and player:hasSkill(miniDingye.name) and player.phase == Player.Finish and player:isWounded()) then
       return false
     end
@@ -21,7 +21,7 @@ miniDingye:addEffect(fk.EventPhaseStart, {
     end) > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function (self, event, target, player)
+  on_use = function (self, event, target, player, data)
     local room = player.room
     local targets = {}
     room.logic:getActualDamageEvents(1, function(e)

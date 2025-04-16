@@ -45,11 +45,11 @@ miniAoxiang:addEffect("viewas", {
 
 miniAoxiang:addEffect(fk.TurnEnd, {
   anim_type = "special",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:usedSkillTimes(miniAoxiang.name, Player.HistoryTurn) > 0 and player:isAlive()
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local choices = { "mini__aoxiang_invalidate" }
     if player.faceup then

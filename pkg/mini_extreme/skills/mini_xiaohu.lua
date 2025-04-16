@@ -14,14 +14,14 @@ Fk:loadTranslationTable{
 
 miniXiaohu:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       target == player and
       player:hasSkill(miniXiaohu.name) and
       player.phase == Player.Play and
       not player:isKongcheng()
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local card = player.room:askToDiscard(
       player,
       {
@@ -36,7 +36,7 @@ miniXiaohu:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniXiaohu.name
     local room = player.room

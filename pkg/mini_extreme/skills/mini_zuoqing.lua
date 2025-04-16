@@ -65,7 +65,7 @@ miniZuoqing:addEffect(fk.CardUsing, {
     return target == player and data.card.trueName == "slash" and player:getMark("@mini__zuoqing_use") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function (skill, event, target, player, data)
+  on_use = function (self, event, target, player, data)
     player.room:removePlayerMark(player, "@mini__zuoqing_use")
     player:drawCards(1, miniZuoqing.name)
   end,
@@ -78,7 +78,7 @@ miniZuoqing:addEffect(fk.CardResponding, {
     return target == player and data.card.trueName == "slash" and player:getMark("@mini__zuoqing_response") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function (skill, event, target, player, data)
+  on_use = function (self, event, target, player, data)
     player.room:removePlayerMark(player, "@mini__zuoqing_response")
     player:drawCards(1, miniZuoqing.name)
   end,

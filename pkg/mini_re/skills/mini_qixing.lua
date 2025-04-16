@@ -9,10 +9,10 @@ Fk:loadTranslationTable{
 
 miniQixing:addEffect(fk.EnterDying, {
   anim_type = "defensive",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniQixing.name) and player:usedSkillTimes(miniQixing.name, Player.HistoryRound) == 0
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local judge = {
       who = player,

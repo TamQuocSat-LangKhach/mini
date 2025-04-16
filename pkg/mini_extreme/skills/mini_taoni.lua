@@ -17,10 +17,10 @@ Fk:loadTranslationTable{
 
 miniTaoni:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniTaoni.name) and player.phase == Player.Play and player.hp > 0
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local choices = {}
     for i = 1, player.hp do
       table.insert(choices, tostring(i))
@@ -39,7 +39,7 @@ miniTaoni:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniTaoni.name
     ---@type integer

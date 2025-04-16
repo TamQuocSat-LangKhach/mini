@@ -30,14 +30,14 @@ miniQingjuez:addEffect(fk.EnterDying, {
 })
 
 miniQingjuez:addEffect(fk.EventPhaseChanging, {
-  can_refresh = function (skill, event, target, player, data)
+  can_refresh = function (self, event, target, player, data)
     return
       target == player and
       not data.skipped and
       data.phase == Player.Draw and
       player:getMark("mini__qingjuez") > 0
   end,
-  on_refresh = function (skill, event, target, player, data)
+  on_refresh = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "mini__qingjuez", 0)
     data.skipped = true
   end,

@@ -12,7 +12,7 @@ Fk:loadTranslationTable{
 
 miniHuixin:addEffect(fk.TurnStart, {
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniHuixin.name
     local room = player.room

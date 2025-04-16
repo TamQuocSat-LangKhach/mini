@@ -32,7 +32,7 @@ miniBianguan:addEffect(fk.PindianFinished, {
       end
     end
   end,
-  on_use = function (skill, event, target, player, data)
+  on_use = function (self, event, target, player, data)
     local room = player.room
     local cards = {}
     if data.fromCard.is_damage_card and room:getCardArea(data.fromCard) == Card.Processing then
@@ -58,7 +58,7 @@ miniBianguan:addEffect(fk.Death, {
         return not p:isKongcheng()
       end) > 1
   end,
-  on_use = function (skill, event, target, player, data)
+  on_use = function (self, event, target, player, data)
     ---@type string
     local skillName = miniBianguan.name
     local room = player.room

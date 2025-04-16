@@ -15,14 +15,14 @@ Fk:loadTranslationTable{
 }
 
 miniLvyuan:addEffect(fk.EventPhaseStart, {
-  can_trigger = function (self, event, target, player)
+  can_trigger = function (self, event, target, player, data)
     return
       target == player and
       player:hasSkill(miniLvyuan.name) and
       player.phase == Player.Finish and
       not player:isNude()
   end,
-  on_use = function (self, event, target, player)
+  on_use = function (self, event, target, player, data)
     ---@type string
     local skillName = miniLvyuan.name
     local room = player.room
@@ -49,10 +49,10 @@ miniLvyuan:addEffect(fk.EventPhaseStart, {
 })
 
 miniLvyuan:addEffect(fk.TurnStart, {
-  can_refresh = function (self, event, target, player)
+  can_refresh = function (self, event, target, player, data)
     return target == player and player:getMark("@mini_lvyuan") ~= 0
   end,
-  on_refresh = function (self, event, target, player)
+  on_refresh = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "@mini_lvyuan", 0)
   end
 })

@@ -54,9 +54,7 @@ miniTianfa:addEffect(fk.CardUseFinished, {
       data.card.type == Card.TypeTrick and
       player:getMark("mini__tianfa_count-turn") > 1
   end,
-  on_cost = function (skill, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "mini__tianfa_count-turn", 0)

@@ -13,7 +13,7 @@ Fk:loadTranslationTable{
 local miniUtil = require "packages/mini/mini_util"
 
 miniexYingrui:addEffect(fk.EventPhaseEnd, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       player == target and
       player.phase == Player.Draw and
@@ -21,7 +21,7 @@ miniexYingrui:addEffect(fk.EventPhaseEnd, {
       player:getMark("@mini_moulue") < 5
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     miniUtil.handleMoulue(player.room, player, 4)
   end,
 })
@@ -35,7 +35,7 @@ miniexYingrui:addEffect(fk.Deathed, {
       player:getMark("@mini_moulue") < 5
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     miniUtil.handleMoulue(player.room, player, 4)
   end,
 })

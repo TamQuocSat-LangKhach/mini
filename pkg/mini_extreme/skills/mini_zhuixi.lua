@@ -14,7 +14,7 @@ Fk:loadTranslationTable{
 
 miniZhuixi:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       target == player and
       player:hasSkill(miniZhuixi.name) and
@@ -25,7 +25,7 @@ miniZhuixi:addEffect(fk.EventPhaseStart, {
       ) and
       not player:prohibitUse(Fk:cloneCard("slash"))
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local use = player.room:askToUseVirtualCard(
       player,
       {
@@ -41,7 +41,7 @@ miniZhuixi:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     player.room:useCard(event:getCostData(self))
   end,
 })

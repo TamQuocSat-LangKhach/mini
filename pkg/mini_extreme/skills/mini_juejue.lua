@@ -12,10 +12,10 @@ Fk:loadTranslationTable{
 
 miniJuejue:addEffect(fk.TurnEnd, {
   anim_type = "offensive",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(miniJuejue.name) and player:getMark("mini__juejue-turn") > 0
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniJuejue.name
     local room = player.room
@@ -47,7 +47,7 @@ miniJuejue:addEffect(fk.AfterCardsMove, {
       end
     end
   end,
-  on_refresh = function(self, event, target, player)
+  on_refresh = function(self, event, target, player, data)
     player.room:setPlayerMark(player, "mini__juejue-turn", 1)
   end,
 })

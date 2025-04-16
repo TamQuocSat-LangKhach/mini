@@ -13,7 +13,7 @@ local miniUtil = require "packages/mini/mini_util"
 
 miniGujin:addEffect(fk.TurnEnd, {
   anim_type = "special",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       player:hasSkill(miniGujin.name) and
       player:getMark("@mini_moulue") < 5 and
@@ -22,7 +22,7 @@ miniGujin:addEffect(fk.TurnEnd, {
         return use.from ~= player and table.contains(use.tos, player)
       end, Player.HistoryTurn) == 0
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     miniUtil.handleMoulue(player.room, player, 1)
   end,
 })

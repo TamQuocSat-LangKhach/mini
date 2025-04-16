@@ -16,14 +16,14 @@ Fk:loadTranslationTable{
 
 miniXiangwei:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(miniXiangwei.name) and player.phase == Player.Start then
       local card = Fk:cloneCard("savage_assault")
       card.skillName = miniXiangwei.name
       return player:canUse(card)
     end
   end,
-  on_use = function (skill, event, target, player)
+  on_use = function (self, event, target, player, data)
     ---@type string
     local skillName = miniXiangwei.name
     local room = player.room
@@ -78,7 +78,7 @@ miniXiangwei:addEffect(fk.DamageCaused, {
     return target == player and player:getMark("@@mini__xiangwei_damage-turn") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function (skill, event, target, player, data)
+  on_use = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "@@mini__xiangwei_damage-turn", 0)
     data:changeDamage(1)
   end,

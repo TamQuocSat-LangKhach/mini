@@ -12,7 +12,7 @@ Fk:loadTranslationTable{
 
 miniZaiqi:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       target == player and
       player:hasSkill(miniZaiqi.name) and

@@ -15,13 +15,13 @@ Fk:loadTranslationTable{
 local U = require "packages/utility/utility"
 
 miniLuheng:addEffect(fk.EventPhaseStart, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       player:hasSkill(miniLuheng.name) and
       player.phase == Player.Finish and
       player:usedSkillTimes("mini__zongxi", Player.HistoryTurn) > 0
   end,
-  on_cost = function (self, event, target, player)
+  on_cost = function (self, event, target, player, data)
     local room = player.room
     local targets = {}
     room.logic:getEventsOfScope(GameEvent.JointPindian, 1, function(e)
@@ -53,7 +53,7 @@ miniLuheng:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function (self, event, target, player)
+  on_use = function (self, event, target, player, data)
     local cost_data = event:getCostData(self)
     player.room:useVirtualCard("slash", nil, player, cost_data.tos[1], miniLuheng.name, true)
   end,

@@ -20,10 +20,10 @@ Fk:loadTranslationTable{
 
 miniHezong:addEffect(fk.RoundStart, {
   anim_type = "support",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(miniHezong.name)
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = player.room:askToChoosePlayers(
       player,
@@ -40,7 +40,7 @@ miniHezong:addEffect(fk.RoundStart, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local targets = event:getCostData(self)
     for i, p in ipairs(targets) do

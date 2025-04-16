@@ -9,10 +9,10 @@ Fk:loadTranslationTable{
 
 miniSpKunfen:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniSpKunfen.name) and player.phase == Player.Finish
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniSpKunfen.name
     player.room:loseHp(player, 1, skillName)

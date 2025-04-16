@@ -13,18 +13,18 @@ Fk:loadTranslationTable{
 local miniUtil = require "packages/mini/mini_util"
 
 miniSuanlve:addEffect(fk.GameStart, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(miniSuanlve.name) and player:getMark("@mini_moulue") < 5
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     miniUtil.handleMoulue(room, player, 3)
   end,
 })
 
 miniSuanlve:addEffect(fk.TurnEnd, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(miniSuanlve.name) or player:getMark("@mini_moulue") >= 5 then
       return false
     end
@@ -40,7 +40,7 @@ miniSuanlve:addEffect(fk.TurnEnd, {
       ) > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local cardTypes = {}
     room.logic:getEventsOfScope(

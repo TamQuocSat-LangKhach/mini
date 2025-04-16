@@ -14,14 +14,14 @@ Fk:loadTranslationTable{
 
 miniWansha:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return
       target == player and
       player:hasSkill(miniWansha.name) and
       player.phase == Player.Play and
       table.find(player.room.alive_players, function(p) return p.hp > 1 end)
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     ---@type string
     local skillName = miniWansha.name
     local room = player.room
@@ -52,7 +52,7 @@ miniWansha:addEffect(fk.EventPhaseStart, {
 miniWansha:addEffect(fk.EventPhaseEnd, {
   is_delay_effect = true,
   mute = true,
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     if player ~= target or target:getMark("_mini__wansha-phase") == 0 then
       return false
     end
@@ -60,7 +60,7 @@ miniWansha:addEffect(fk.EventPhaseEnd, {
     local victim = player.room:getPlayerById(player:getMark("_mini__wansha-phase"))
     return victim:isAlive() and victim:isWounded()
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local victim = room:getPlayerById(player:getMark("_mini__wansha-phase"))
     if victim:isAlive() then
@@ -85,10 +85,10 @@ miniWansha:addEffect("prohibit", {
 })
 
 miniWansha:addEffect(fk.EnterDying, {
-  can_refresh = function(self, event, target, player)
+  can_refresh = function(self, event, target, player, data)
     return player:hasSkill(miniWansha.name) and player.phase ~= Player.NotActive
   end,
-  on_refresh = function(self, event, target, player)
+  on_refresh = function(self, event, target, player, data)
     player.room:notifySkillInvoked(player, miniWansha.name)
     player:broadcastSkillInvoke("wansha")
   end,

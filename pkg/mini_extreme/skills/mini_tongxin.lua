@@ -91,7 +91,7 @@ miniTongxin:addEffect("active", {
 
 -- 触发技能
 miniTongxin:addEffect(fk.CardUsing, {
-  can_refresh = function(self, event, target, player)
+  can_refresh = function(self, event, target, player, data)
     return target == player and player:hasSkill(miniTongxin.name, true) and player.phase ~= Player.NotActive
   end,
   on_refresh = function(self, event, target, player, data)

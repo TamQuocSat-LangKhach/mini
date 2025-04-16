@@ -16,7 +16,7 @@ local U = require "packages/utility/utility"
 
 sijiu:addEffect(fk.RoundEnd, {
   anim_type = "drawcard",
-  can_trigger = function (self, event, target, player)
+  can_trigger = function (self, event, target, player, data)
       return
         player:hasSkill(sijiu.name) and
         #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
@@ -34,7 +34,7 @@ sijiu:addEffect(fk.RoundEnd, {
         Player.HistoryRound
       ) > 0
   end,
-  on_use = function (self, event, target, player)
+  on_use = function (self, event, target, player, data)
     ---@type string
     local skillName = sijiu.name
     local room = player.room
