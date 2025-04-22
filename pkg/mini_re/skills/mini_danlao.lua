@@ -20,7 +20,7 @@ miniDanlao:addEffect("active", {
   target_num = 0,
   card_filter = Util.FalseFunc,
   target_filter = Util.FalseFunc,
-  can_use = function (skill, player)
+  can_use = function (self, player)
     return player:usedSkillTimes(miniDanlao.name, Player.HistoryPhase) == 0
   end,
   on_use = function (self, room, effect)

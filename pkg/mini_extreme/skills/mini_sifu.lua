@@ -64,7 +64,7 @@ miniSifu:addEffect("active", {
     return -1
   end,
   card_filter = Util.FalseFunc,
-  can_use = function (skill, player)
+  can_use = function (self, player)
     return
       player:hasSkill(miniSifu.name, true) and
       (player:getMark("mini_sifu_choice1-phase") == 0 or player:getMark("mini_sifu_choice2-phase") == 0)

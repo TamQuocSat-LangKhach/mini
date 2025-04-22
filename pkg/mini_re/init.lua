@@ -119,4 +119,17 @@ Fk:loadTranslationTable{
   ["illustrator:mini__yangxiu"] = "NOVART", -- 胸中绵帛
 }
 
+General:new(extension, "sunhanhua", "wu", 3, 3, General.Female):addSkills {
+  "mini__chongxu",
+  "miaojian",
+  "lianhuas",
+}
+Fk:loadTranslationTable{
+  ["sunhanhua"] = "孙寒华",
+  ["#sunhanhua"] = "挣绽的青莲",
+  ["illustrator:sunhanhua"] = "匠人绘",
+
+  ["~sunhanhua"] = "天有寒暑，人有死生……",
+}
+
 return extension

@@ -66,7 +66,7 @@ miniXiangwei:addEffect(fk.EventPhaseStart, {
 })
 
 miniXiangwei:addEffect("targetmod", {
-  bypass_times = function (skill, player, skill2, scope, card, to)
+  bypass_times = function (self, player, skill2, scope, card, to)
     return card and table.contains(player:getTableMark("@@mini__xiangwei_bypass_times-turn"), to.id)
   end,
 })

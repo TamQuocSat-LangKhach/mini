@@ -42,7 +42,7 @@ miniBeijia:addEffect("viewas", {
   enabled_at_play = function(self, player)
     return player:usedSkillTimes(miniBeijia.name) == 0 and player:getMark("@mini_beijia") ~= 0
   end,
-  enabled_at_response = function (skill, player, response)
+  enabled_at_response = function (self, player, response)
     if player:usedSkillTimes(miniBeijia.name) == 0 and player:getMark("@mini_beijia") ~= 0 and not response then
       if player:getSwitchSkillState(miniBeijia.name, false) == fk.SwitchYang then
         return Exppattern:Parse(Fk.currentResponsePattern):matchExp(".|.|.|.|.|trick|.")
