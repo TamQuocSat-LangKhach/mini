@@ -5,7 +5,7 @@ local miniYanfeng = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["mini__yanfeng"] = "炎锋",
-  [":mini__yanfeng"] = "<a href='MiniForceSkill'>奋武技</a>，出牌阶段，你可以将一张牌当无距离限制的火【杀】使用。" ..
+  [":mini__yanfeng"] = "<a href='MiniForceSkill'>奋武技</a>，出牌阶段，你可以将一张牌当火【杀】使用。" ..
   "若此【杀】未造成伤害且仅指定唯一目标，你令目标选择一项：1.对你造成1点伤害；2.令你摸一张牌，本回合你对其使用的下一张【杀】无效。",
 
   ["#mini__yanfeng"] = "炎锋：你可以将一张牌当无距离限制的火【杀】使用",
@@ -71,12 +71,6 @@ miniYanfeng:addEffect("viewas", {
   end,
 })
 
-miniYanfeng:addEffect("targetmod", {
-  bypass_distances = function (self, player, skill, card, to)
-    return card and table.contains(card.skillNames, "mini__yanfeng")
-  end,
-})
-
 miniYanfeng:addEffect(fk.PreCardEffect, {
   is_delay_effect = true,
   mute = true,
@@ -86,7 +80,6 @@ miniYanfeng:addEffect(fk.PreCardEffect, {
       data.card.trueName == "slash" and
       table.contains(player:getTableMark("mini__yanfeng-turn"), data.to.id)
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     player.room:removeTableMark(player, "mini__yanfeng-turn", data.to.id)
     data.nullified = true

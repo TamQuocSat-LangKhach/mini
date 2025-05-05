@@ -5,7 +5,7 @@ local miniXiangwei = fk.CreateSkill {
 Fk:loadTranslationTable{
   ["mini__xiangwei"] = "象威",
   [":mini__xiangwei"] = "准备阶段，你可以视为使用一张【南蛮入侵】，然后选择一项：1.本回合对未因此牌受到伤害的其他角色使用牌无次数限制；" ..
-  "2.本回合你造成的下一次伤害+1。",
+  "2.本回合你造成的下一次伤害+1（若没有角色受到此牌伤害则不能选择此项）。",
 
   ["mini__xiangwei_bypass_times"] = "对未受到伤害的角色使用牌无次数限制",
   ["mini__xiangwei_damage"] = "造成的下一次伤害+1",
@@ -38,7 +38,10 @@ miniXiangwei:addEffect(fk.EventPhaseStart, {
       return false
     end
 
-    local choices = { "mini__xiangwei_damage" }
+    local choices = { }
+    if use.damageDealt then
+      table.insert(choices, "mini__xiangwei_damage")
+    end
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(player)) do
       if not (use.damageDealt and use.damageDealt[p]) then
@@ -48,15 +51,13 @@ miniXiangwei:addEffect(fk.EventPhaseStart, {
     if #targets > 0 then
       table.insert(choices, 1, "mini__xiangwei_bypass_times")
     end
+    if #choices == 0 then return end
 
-    local choice = room:askToChoice(
-      player,
-      {
-        choices = choices,
-        skill_name = skillName,
-        prompt = "#mini__xiangwei-turn",
-      }
-    )
+    local choice = room:askToChoice(player, {
+      choices = choices,
+      skill_name = skillName,
+      prompt = "#mini__xiangwei-turn",
+    })
     if choice == "mini__xiangwei_bypass_times" then
       room:setPlayerMark(player, "@@mini__xiangwei_bypass_times-turn", targets)
     else
@@ -72,12 +73,11 @@ miniXiangwei:addEffect("targetmod", {
 })
 
 miniXiangwei:addEffect(fk.DamageCaused, {
-  is_delay_effect = true,
   anim_type = "offensive",
+  is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:getMark("@@mini__xiangwei_damage-turn") > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "@@mini__xiangwei_damage-turn", 0)
     data:changeDamage(1)

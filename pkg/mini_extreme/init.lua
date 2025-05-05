@@ -179,21 +179,9 @@ Fk:loadTranslationTable{
   ["~miniex__guanyu"] = "大丈夫为忠为义，何惜死乎！",
 }
 
-local miniExJiangwei = General:new(extension, "miniex__jiangwei", "shu", 4)
-miniExJiangwei:addSkills { "mini__gujin", "mini__qumou" }
-miniExJiangwei:addRelatedSkill("mini_miaoji")
+General:new(extension, "miniex__dongzhuo", "qun", 5):addSkills { "mini__weicheng", "mini__bianguan" }
 Fk:loadTranslationTable{
-  ["miniex__jiangwei"] = "极姜维",
-}
-
-General:new(extension, "miniex__caozhi", "wei", 3):addSkills { "mini__caiyi", "mini__aoxiang" }
-Fk:loadTranslationTable{
-  ["miniex__caozhi"] = "极曹植",
-}
-
-General:new(extension, "miniex__liubei", "shu", 4):addSkills { "mini__guizhi", "mini__hengyi" }
-Fk:loadTranslationTable{
-  ["miniex__liubei"] = "极刘备",
+  ["miniex__dongzhuo"] = "极董卓",
 }
 
 General:new(extension, "miniex__zhurong", "shu", 4, 4, General.Female):addSkills {
@@ -204,9 +192,26 @@ Fk:loadTranslationTable{
   ["miniex__zhurong"] = "极祝融",
 }
 
-General:new(extension, "miniex__dongzhuo", "qun", 5):addSkills { "mini__weicheng", "mini__bianguan" }
+General:new(extension, "miniex__caozhi", "wei", 3):addSkills { "mini__caiyi", "mini__aoxiang" }
 Fk:loadTranslationTable{
-  ["miniex__dongzhuo"] = "极董卓",
+  ["miniex__caozhi"] = "极曹植",
+}
+
+General:new(extension, "miniex__zhangfei", "shu", 4):addSkills { "mini__hupo", "mini__hanxing" }
+Fk:loadTranslationTable{
+  ["miniex__zhangfei"] = "极张飞",
+}
+
+local miniExJiangwei = General:new(extension, "miniex__jiangwei", "shu", 4)
+miniExJiangwei:addSkills { "mini__gujin", "mini__qumou" }
+miniExJiangwei:addRelatedSkill("mini_miaoji")
+Fk:loadTranslationTable{
+  ["miniex__jiangwei"] = "极姜维",
+}
+
+General:new(extension, "miniex__liubei", "shu", 4):addSkills { "mini__guizhi", "mini__hengyi" }
+Fk:loadTranslationTable{
+  ["miniex__liubei"] = "极刘备",
 }
 
 General:new(extension, "miniex__hetaihou", "qun", 3, 3, General.Female):addSkills {
@@ -232,11 +237,6 @@ General:new(extension, "miniex__zhangchunhua", "wei", 3, 3, General.Female):addS
 }
 Fk:loadTranslationTable{
   ["miniex__zhangchunhua"] = "极张春华",
-}
-
-General:new(extension, "miniex__zhangfei", "shu", 4):addSkills { "mini__hupo", "mini__hanxing" }
-Fk:loadTranslationTable{
-  ["miniex__zhangfei"] = "极张飞",
 }
 
 return extension

@@ -32,7 +32,7 @@ miniMiaoji:addEffect("viewas", {
     elseif player:getMark("@mini_moulue") > 0 then
       names = { "dismantlement" }
     end
-    names = U.getViewAsCardNames(player, miniMiaoji.name, names)
+    names = player:getViewAsCardNames(miniMiaoji.name, names)
     return U.CardNameBox { choices = names, all_choices = { "dismantlement", "nullification", "ex_nihilo" } }
   end,
   card_filter = Util.FalseFunc,
@@ -57,7 +57,7 @@ miniMiaoji:addEffect("viewas", {
     elseif player:getMark("@mini_moulue") > 0 then
       names = { "dismantlement" }
     end
-    return #U.getViewAsCardNames(player, miniMiaoji.name, names) > 0
+    return #player:getViewAsCardNames(miniMiaoji.name, names) > 0
   end,
 })
 

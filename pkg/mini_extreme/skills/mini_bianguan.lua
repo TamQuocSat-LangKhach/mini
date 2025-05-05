@@ -5,13 +5,12 @@ local miniBianguan = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["mini__bianguan"] = "变观",
-  [":mini__bianguan"] = "锁定技，当你每轮首次参与<a href='zhuluPindian'>逐鹿</a>后，你获得本次逐鹿拼点牌中的所有伤害牌；" ..
+  [":mini__bianguan"] = "锁定技，当你每轮首次参与<a href='zhuluPindian'>逐鹿</a>后，你获得本次逐鹿拼点牌中的所有伤害牌和基本牌；" ..
   "当你死亡时，令场上所有存活角色进行一次逐鹿，所有败者失去1点体力。",
 }
 
 local U = require "packages/utility/utility"
 
--- 第一个效果
 miniBianguan:addEffect(fk.PindianFinished, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
@@ -22,11 +21,13 @@ miniBianguan:addEffect(fk.PindianFinished, {
       player:usedEffectTimes(self.name, Player.HistoryRound) == 0
     then
       local room = player.room
-      if data.fromCard.is_damage_card and room:getCardArea(data.fromCard) == Card.Processing then
+      if (data.fromCard.is_damage_card or data.fromCard.type == Card.TypeBasic) and
+        room:getCardArea(data.fromCard) == Card.Processing then
         return true
       end
       for _, result in pairs(data.results) do
-        if result.toCard.is_damage_card and room:getCardArea(result.toCard) == Card.Processing then
+        if (result.toCard.is_damage_card or result.toCard.type == Card.TypeBasic) and
+          room:getCardArea(result.toCard) == Card.Processing then
           return true
         end
       end
@@ -35,11 +36,13 @@ miniBianguan:addEffect(fk.PindianFinished, {
   on_use = function (self, event, target, player, data)
     local room = player.room
     local cards = {}
-    if data.fromCard.is_damage_card and room:getCardArea(data.fromCard) == Card.Processing then
+    if (data.fromCard.is_damage_card or data.fromCard.type == Card.TypeBasic) and
+      room:getCardArea(data.fromCard) == Card.Processing then
       table.insertTable(cards, Card:getIdList(data.fromCard))
     end
     for _, result in pairs(data.results) do
-      if result.toCard.is_damage_card and room:getCardArea(result.toCard) == Card.Processing then
+      if (result.toCard.is_damage_card or result.toCard.type == Card.TypeBasic) and
+        room:getCardArea(result.toCard) == Card.Processing then
         table.insertTableIfNeed(cards, Card:getIdList(result.toCard))
       end
     end
@@ -47,7 +50,6 @@ miniBianguan:addEffect(fk.PindianFinished, {
   end,
 })
 
--- 第二个效果
 miniBianguan:addEffect(fk.Death, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)

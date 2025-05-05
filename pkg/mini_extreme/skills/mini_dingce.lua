@@ -48,7 +48,7 @@ miniDingce:addEffect("viewas", {
       player:usedSkillTimes(miniDingce.name, Player.HistoryTurn) == 0 and
       player:getMark("mini_dingce-turn") ~= 0 and
       player:getMark("@mini_moulue") > 0 and
-      #U.getViewAsCardNames(player, miniDingce.name, { player:getMark("mini_dingce-turn") }) > 0
+      #player:getViewAsCardNames(miniDingce.name, { player:getMark("mini_dingce-turn") }) > 0
   end,
   enabled_at_response = function(self, player, response)
     if
@@ -61,7 +61,7 @@ miniDingce:addEffect("viewas", {
       return false
     end
 
-    return #U.getViewAsCardNames(player, miniDingce.name, { player:getMark("mini_dingce-turn") }) > 0
+    return #player:getViewAsCardNames(miniDingce.name, { player:getMark("mini_dingce-turn") }) > 0
   end,
 })
 

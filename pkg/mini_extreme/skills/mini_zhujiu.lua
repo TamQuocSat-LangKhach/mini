@@ -13,8 +13,6 @@ Fk:loadTranslationTable{
   ["$mini_zhujiu2"] = "玄德久历四方，可识天下英雄？"
 }
 
-local U = require "packages/utility/utility"
-
 miniZhujiu:addEffect("active", {
   can_use = function(self, player)
     return player:usedSkillTimes(miniZhujiu.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
@@ -43,7 +41,10 @@ miniZhujiu:addEffect("active", {
       }
     )
     local fromCard, toCard = result[player][1], result[target][1]
-    U.swapCards(room, player, player, target, { fromCard }, { toCard }, skillName)
+    room:swapCards(player, {
+      {player, {fromCard}},
+      {target, {toCard}},
+    }, skillName)
     if Fk:getCardById(fromCard):compareColorWith(Fk:getCardById(toCard)) then
       if player:isWounded() and player:isAlive() then
         room:recover{

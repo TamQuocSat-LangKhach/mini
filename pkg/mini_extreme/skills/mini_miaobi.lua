@@ -26,7 +26,7 @@ miniMiaobi:addEffect(fk.CardUseFinished, {
       player:hasSkill(miniMiaobi.name) and
       player.phase == Player.Play and
       data.card.type == Card.TypeTrick and
-      U.isPureCard(data.card) and
+      player.room:getCardArea(data.card) == Card.Processing and
       not table.contains(player:getTableMark("_mini_miaobi_used-turn"), data.card.trueName) and
       player.room:getCardArea(data.card) == Card.Processing and
       table.find(data.tos, function(p) return p:isAlive() end)

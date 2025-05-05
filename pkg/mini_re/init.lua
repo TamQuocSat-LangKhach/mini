@@ -132,4 +132,14 @@ Fk:loadTranslationTable{
   ["~sunhanhua"] = "天有寒暑，人有死生……",
 }
 
+local guanyinping =  General:new(extension, "mini__guanyinping", "shu", 3, 3, General.Female)
+guanyinping:addSkills { "mini__xuehen", "mini__huxiao", "mini__wuji" }
+guanyinping:addRelatedSkill("ex__wusheng")
+Fk:loadTranslationTable{
+  ["mini__guanyinping"] = "关银屏",
+  ["#mini__guanyinping"] = "烈焰炽魂",
+
+  ["~mini__guanyinping"] = "女儿无能，竟使父亲蒙羞……",
+}
+
 return extension
