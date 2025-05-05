@@ -132,6 +132,24 @@ Fk:loadTranslationTable{
   ["~sunhanhua"] = "天有寒暑，人有死生……",
 }
 
+General:new(extension, "mini__bianfuren", "wei", 3, 3, General.Female):addSkills { "mini__wanwei", "mini__yuejian" }
+Fk:loadTranslationTable{
+  ["mini__bianfuren"] = "卞夫人",
+  ["#mini__bianfuren"] = "紫绡雪颜",
+  ["illustrator:mini__bianfuren"] = "凡果",
+}
+
+General:new(extension, "mini_sp__caiwenji", "wei", 3, 3, General.Female):addSkills { "chenqing", "mini__mozhi" }
+Fk:loadTranslationTable{
+  ["mini_sp__caiwenji"] = "蔡文姬",
+  ["#mini_sp__caiwenji"] = "金璧之才",
+  ["illustrator:mini_sp__caiwenji"] = "圆子",
+
+  ["$chenqing_mini_sp__caiwenji1"] = "虎士成林，何惜疾足一骑。",
+  ["$chenqing_mini_sp__caiwenji2"] = "翩翩吹我衣，肃肃入我耳。",
+  ["~mini_sp__caiwenji"] = "今生悲苦，总算完结了。",
+}
+
 local guanyinping =  General:new(extension, "mini__guanyinping", "shu", 3, 3, General.Female)
 guanyinping:addSkills { "mini__xuehen", "mini__huxiao", "mini__wuji" }
 guanyinping:addRelatedSkill("ex__wusheng")

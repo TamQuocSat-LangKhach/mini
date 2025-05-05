@@ -7,11 +7,7 @@ Fk:loadTranslationTable{
   ["minisp"] = "小程序专属",
 }
 
-General:new(extension, "liuling", "qun", 3):addSkills {
-  "jiusong",
-  "maotao",
-  "bishi",
-}
+General:new(extension, "liuling", "qun", 3):addSkills { "jiusong", "maotao", "bishi" }
 Fk:loadTranslationTable{
   ["liuling"] = "刘伶",
 
@@ -30,7 +26,14 @@ General:new(extension, "xiangxiu", "wei", 3):addSkills { "miaoxi", "sijiu" }
 Fk:loadTranslationTable{
   ["xiangxiu"] = "向秀",
 
-  ["~xiangxiu"] = "",
+  ["~xiangxiu"] = "无为民自化，丧我与物齐。",
+}
+
+General:new(extension, "mini__jikang", "wei", 3):addSkills { "jikai", "qingkuang", "yinyij" }
+Fk:loadTranslationTable{
+  ["mini__jikang"] = "嵇康",
+
+  ["~mini__jikang"] = "",
 }
 
 return extension
