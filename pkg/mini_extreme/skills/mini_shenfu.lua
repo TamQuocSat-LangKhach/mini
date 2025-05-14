@@ -4,7 +4,7 @@ local miniShenfu = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["mini_shenfu"] = "神赋",
-  [":mini_shenfu"] = "①当一名角色受到1点伤害后，你获得1枚“洛神”标记，上限为6。结束阶段，你弃置所有“洛神”标记，" ..
+  [":mini_shenfu"] = "①当一名角色受到1点伤害后，你获得1枚“洛神”标记，上限为6。②结束阶段，你弃所有“洛神”标记，" ..
   "亮出牌堆顶等量张牌，然后选择一项：1.可以依次使用其中的黑色牌；2.获得其中的红色牌。",
 
   ["@mini_shenfu_luoshen"] = "洛神",
@@ -31,8 +31,9 @@ miniShenfu:addEffect(fk.Damaged, {
 })
 
 miniShenfu:addEffect(fk.EventPhaseStart, {
-  can_trigger = function(self, event, target)
-    return target.phase == Player.Finish and target:getMark("@mini_shenfu_luoshen") > 0
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(miniShenfu.name) and target == player
+      and target.phase == Player.Finish and target:getMark("@mini_shenfu_luoshen") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
