@@ -13,7 +13,7 @@ local miniExYajiaoSpec = {
       target == player and
       player:hasSkill(miniExYajiao.name) and
       player.phase == Player.NotActive and
-      data:IsUsingHandcard(player)
+      data:isUsingHandcard(player)
   end,
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke("yajiao")
