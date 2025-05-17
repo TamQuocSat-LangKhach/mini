@@ -12,6 +12,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__lvbu", "qun", 4):addSkills { "wushuang", "mini_xiaohu" }
 Fk:loadTranslationTable{
   ["miniex__lvbu"] = "极吕布",
+  ["illustrator:miniex__lvbu"] = "君桓文化",
+
 
   ["$wushuang_miniex__lvbu1"] = "此身此武，天下无双！",
   ["$wushuang_miniex__lvbu2"] = "乘赤兔，舞画戟，斩将破敌不过举手而为！",
@@ -25,6 +27,8 @@ General:new(extension, "miniex__daqiao", "wu", 3, 3, General.Female):addSkills {
 }
 Fk:loadTranslationTable{
   ["miniex__daqiao"] = "极大乔",
+  ["#miniex__daqiao"] = "矜持之花",
+  ["illustrator:miniex__daqiao"] = "匠人绘",
 
   ["~miniex__daqiao"] = "忆君如流水，日夜无歇时……",
 }
@@ -35,6 +39,8 @@ General:new(extension, "miniex__xiaoqiao", "wu", 3, 3, General.Female):addSkills
 }
 Fk:loadTranslationTable{
   ["miniex__xiaoqiao"] = "极小乔",
+  ["#miniex__xiaoqiao"] = "矫情之花",
+  ["illustrator:miniex__xiaoqiao"] = "Jzeo",
 
   ["~miniex__xiaoqiao"] = "公瑾，好想你再拥我入怀……",
 }
@@ -44,6 +50,8 @@ miniExGuojia:addSkills { "mini_dingce", "mini_suanlve" }
 miniExGuojia:addRelatedSkill("mini_miaoji")
 Fk:loadTranslationTable{
   ["miniex__guojia"] = "极郭嘉",
+  ["#miniex__guojia"] = "早终的先知",
+  ["illustrator:miniex__guojia"] = "匠人绘",
 
   ["~miniex__guojia"] = "经此一别，已无再见之日……",
 }
@@ -51,6 +59,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__machao", "shu", 4):addSkills { "mini_qipao", "mini_zhuixi" }
 Fk:loadTranslationTable{
   ["miniex__machao"] = "极马超",
+  ["#miniex__machao"] = "一骑当千",
+  ["illustrator:miniex__machao"] = "匠人绘",
 
   ["~miniex__machao"] = "曹贼！战场再见，吾必杀汝！",
 }
@@ -60,6 +70,8 @@ miniExZhugeliang:addSkills { "mini_sangu", "mini_yanshi" }
 miniExZhugeliang:addRelatedSkill("mini_miaoji")
 Fk:loadTranslationTable{
   ["miniex__zhugeliang"] = "极诸葛亮",
+  ["#miniex__zhugeliang"] = "卧龙",
+  ["illustrator:miniex__zhugeliang"] = "聚一",
 
   ["$mini_miaoji_miniex__zhugeliang1"] = "大梦先觉，感三顾之诚，布天下三分。",
   ["$mini_miaoji_miniex__zhugeliang2"] = "卧龙初晓，铭鱼水之情，托死生之志。",
@@ -72,6 +84,8 @@ miniExHuangyueying:addSkills { "mini_miaobi", "mini_huixin" }
 miniExHuangyueying:addRelatedSkills { "jizhi", "mini_jifeng" }
 Fk:loadTranslationTable{
   ["miniex__huangyueying"] = "极黄月英",
+  ["#miniex__huangyueying"] = "归隐的杰女",
+  ["illustrator:miniex__huangyueying"] = "鹿田",
 
   ["~miniex__huangyueying"] = "纨质陨残暮，思旧梦魂远。",
 }
@@ -79,6 +93,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__caocao", "wei", 4):addSkills { "mini_delu", "mini_zhujiu" }
 Fk:loadTranslationTable{
   ["miniex__caocao"] = "极曹操",
+  ["#miniex__caocao"] = "魏武帝",
+  ["illustrator:miniex__caocao"] = "铁杵",
 
   ["~miniex__caocao"] = "吾之一生或负天下，然终不负己心。",
 }
@@ -88,6 +104,8 @@ miniExSimayi:addSkills { "mini_yinren", "mini_duoquan" }
 miniExSimayi:addRelatedSkills { "ex__jianxiong", "xingshang", "mingjian" }
 Fk:loadTranslationTable{
   ["miniex__simayi"] = "极司马懿",
+  ["#miniex__simayi"] = "狼顾之鬼",
+  ["illustrator:miniex__simayi"] = "暗金",
 
   ["~miniex__simayi"] = "辟基立业，就交于子元了……",
 }
@@ -95,6 +113,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__yuanshao", "qun", 4):addSkills { "mini_zunbei", "mini_mengshou" }
 Fk:loadTranslationTable{
   ["miniex__yuanshao"] = "极袁绍",
+  ["#miniex__yuanshao"] = "高贵的名门",
+  ["illustrator:miniex__yuanshao"] = "鹿田",
 
   ["~miniex__yuanshao"] = "思谋无断，始至今日……",
 }
@@ -102,6 +122,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__lusu", "wu", 3):addSkills { "mini_lvyuan", "mini_hezong" }
 Fk:loadTranslationTable{
   ["miniex__lusu"] = "极鲁肃",
+  ["#miniex__lusu"] = "独断的外交家",
+  ["illustrator:miniex__lusu"] = "君桓文化",
 
   ["~miniex__lusu"] = "孙刘永结一心，天下必归吾主，咳咳咳……",
 }
@@ -109,6 +131,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__xuchu", "wei", 4):addSkills { "mini_huhou", "mini_wuwei" }
 Fk:loadTranslationTable{
   ["miniex__xuchu"] = "极许褚",
+  ["#miniex__xuchu"] = "虎痴",
+  ["illustrator:miniex__xuchu"] = "鹿田",
 
   ["~miniex__xuchu"] = "丞相，丞相！呃啊……",
 }
@@ -120,6 +144,8 @@ General:new(extension, "miniex__xunyu", "wei", 3):addSkills {
 }
 Fk:loadTranslationTable{
   ["miniex__xunyu"] = "极荀彧",
+  ["#miniex__xunyu"] = "王佐之才",
+  ["illustrator:miniex__xunyu"] = "君桓文化",
 
   ["~miniex__xunyu"] = "初旨可共图，殊途难同归。",
 }
@@ -130,6 +156,8 @@ General:new(extension, "miniex__zhenji", "wei", 3, 3, General.Female):addSkills 
 }
 Fk:loadTranslationTable{
   ["miniex__zhenji"] = "极甄姬",
+  ["#miniex__zhenji"] = "薄幸的美人",
+  ["illustrator:miniex__zhenji"] = "君桓文化",
 
   ["~miniex__zhenji"] = "以发覆面，何等凄凉……",
 }
@@ -141,6 +169,8 @@ General:new(extension, "miniex__sunce", "wu", 4):addSkills {
 }
 Fk:loadTranslationTable{
   ["miniex__sunce"] = "极孙策",
+  ["#miniex__sunce"] = "江东的小霸王",
+  ["illustrator:miniex__sunce"] = "杭州新艺族",
 
   ["~miniex__sunce"] = "有众卿鼎力相辅，仲谋必成大事。",
 }
@@ -148,6 +178,8 @@ Fk:loadTranslationTable{
 General:new(extension, "miniex__sunquan", "wu", 4):addSkills { "mini__zongxi", "mini__luheng" }
 Fk:loadTranslationTable{
   ["miniex__sunquan"] = "极孙权",
+  ["#miniex__sunquan"] = "年轻的贤君",
+  ["illustrator:miniex__sunquan"] = "君桓文化",
 
   ["~miniex__sunquan"] = "余子碌碌，竟无承位之人。",
 }
@@ -157,6 +189,8 @@ miniExZhouyu:addSkills { "miniex__yingrui", "miniex__fenli" }
 miniExZhouyu:addRelatedSkill("mini_miaoji")
 Fk:loadTranslationTable{
   ["miniex__zhouyu"] = "极周瑜",
+  ["#miniex__zhouyu"] = "大都督",
+  ["illustrator:miniex__zhouyu"] = "君桓文化",
 
   ["~miniex__zhouyu"] = "伯符，瑜来也……",
 }
@@ -167,6 +201,8 @@ General:new(extension, "miniex__caiwenji", "qun", 3, 3, General.Female):addSkill
 }
 Fk:loadTranslationTable{
   ["miniex__caiwenji"] = "极蔡文姬",
+  ["#miniex__caiwenji"] = "异乡的孤女",
+  ["illustrator:miniex__caiwenji"] = "君桓文化",
 
   ["~miniex__caiwenji"] = "怨兮欲问天，天苍苍兮上无缘……",
 }
@@ -175,6 +211,8 @@ General:new(extension, "miniex__guanyu", "shu", 4):addSkills { "mini__yihan", "m
 
 Fk:loadTranslationTable{
   ["miniex__guanyu"] = "极关羽",
+  ["#miniex__guanyu"] = "美髯公",
+  ["illustrator:miniex__guanyu"] = "杭州新艺族",
 
   ["~miniex__guanyu"] = "大丈夫为忠为义，何惜死乎！",
 }

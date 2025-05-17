@@ -32,9 +32,19 @@ Fk:loadTranslationTable{
   ["mini__xiahouyuan"] = "夏侯渊",
 }
 
+General:new(extension, "mini__caoren", "wei", 4):addSkill("mini__jushou")
+Fk:loadTranslationTable{
+  ["mini__caoren"] = "曹仁",
+}
+
 General:new(extension, "mini__weiyan", "shu", 4):addSkill("mini__kuanggu")
 Fk:loadTranslationTable{
   ["mini__weiyan"] = "魏延",
+}
+
+General:new(extension, "mini__pangtong", "shu", 3):addSkills { "mini__lianhuan", "mini__niepan" }
+Fk:loadTranslationTable{
+  ["mini__pangtong"] = "庞统",
 }
 
 General:new(extension, "mini__pangde", "qun", 4):addSkills { "mashu", "mini__jianchu" }
@@ -47,20 +57,18 @@ Fk:loadTranslationTable{
   ["mini__menghuo"] = "孟获",
 }
 
-General:new(extension, "mini__jiaxu", "qun", 3):addSkills {
-  "mini__wansha",
-  "mini__luanwu",
-  "weimu",
-}
+General:new(extension, "mini__jiaxu", "qun", 3):addSkills { "mini__wansha", "mini__luanwu", "weimu" }
 Fk:loadTranslationTable{
   ["mini__jiaxu"] = "贾诩",
 }
 
-General:new(extension, "mini__godzhugeliang", "god", 3):addSkills {
-  "mini__qixing",
-  "mini__tianfa",
-  "mini_jifeng",
+General:new(extension, "mini__caiwenji", "qun", 3, 3, General.Female):addSkills { "mini__beige", "mini__duanchang" }
+Fk:loadTranslationTable{
+  ["mini__caiwenji"] = "蔡文姬",
+  ["illustrator:mini__caiwenji"] = "砚对溪华",
 }
+
+General:new(extension, "mini__godzhugeliang", "god", 3):addSkills { "mini__qixing", "mini__tianfa", "mini_jifeng" }
 Fk:loadTranslationTable{
   ["mini__godzhugeliang"] = "神诸葛亮",
 }
