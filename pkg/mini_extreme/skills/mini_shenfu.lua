@@ -33,7 +33,7 @@ miniShenfu:addEffect(fk.Damaged, {
 miniShenfu:addEffect(fk.EventPhaseStart, {
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(miniShenfu.name) and target == player
-      and target.phase == Player.Finish and target:getMark("@mini_shenfu_luoshen") > 0
+      and player.phase == Player.Finish and target:getMark("@mini_shenfu_luoshen") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -44,21 +44,12 @@ miniShenfu:addEffect(fk.EventPhaseStart, {
     room:setPlayerMark(player, "@mini_shenfu_luoshen", 0)
 
     local cards = room:getNCards(num)
-    room:moveCards{
-      ids = cards,
-      toArea = Card.Processing,
-      moveReason = fk.ReasonJustMove,
-      skillName = skillName,
-      proposer = player,
-    }
+    room:turnOverCardsFromDrawPile(player, cards, miniShenfu.name)
 
-    local choice = room:askToChoice(
-      player,
-      {
-        choices = { "mini_shenfu_black", "mini_shenfu_red" },
-        skill_name = skillName,
-      }
-    )
+    local choice = room:askToChoice(player, {
+      choices = { "mini_shenfu_black", "mini_shenfu_red" },
+      skill_name = skillName,
+    })
     if choice == "mini_shenfu_black" then
       for _, id in ipairs(cards) do
         local card = Fk:getCardById(id)
@@ -67,19 +58,17 @@ miniShenfu:addEffect(fk.EventPhaseStart, {
           room:getCardArea(id) == Card.Processing and
           player:canUse(card, { bypass_times = true })
         then
-          room:askToUseRealCard(
-            player,
-            {
-              pattern = { id },
-              skill_name = skillName,
-              prompt = "#mini_shenfu-use:::" .. card:toLogString(),
-              extra_data = {
-                bypass_times = true,
-                expand_pile = { id },
-                extra_use = true,
-              },
-            }
-          )
+          room:askToUseRealCard(player, {
+            pattern = { id },
+            skill_name = skillName,
+            prompt = "#mini_shenfu-use:::" .. card:toLogString(),
+            extra_data = {
+              bypass_times = true,
+              expand_pile = { id },
+              extra_use = true,
+            },
+          })
+          if player.dead then break end
         end
       end
     else

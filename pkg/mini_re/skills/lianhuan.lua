@@ -65,7 +65,7 @@ lianhuan:addEffect(fk.DrawNCards, {
     local n = #table.filter(player.room.alive_players, function (p)
       return p.chained
     end)
-    data.n = data.n + math.max(n, 3)
+    data.n = data.n + math.min(n, 3)
   end,
 })
 

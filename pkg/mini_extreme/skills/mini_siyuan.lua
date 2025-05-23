@@ -36,6 +36,7 @@ miniSiyuan:addEffect(fk.Damaged, {
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = event:getCostData(self)
+    room:doIndicate(data.from, {to})
     room:damage{
       from = data.from,
       to = to,

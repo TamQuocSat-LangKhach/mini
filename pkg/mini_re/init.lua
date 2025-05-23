@@ -12,11 +12,44 @@ Fk:loadTranslationTable{
 General:new(extension, "mini__caocao", "wei", 4):addSkills { "mini__jianxiong", "hujia" }
 Fk:loadTranslationTable{
   ["mini__caocao"] = "曹操",
+  ["#mini__caocao"] = "魏武帝",
+}
+
+General:new(extension, "mini__xuchu", "wei", 4):addSkills { "mini__luoyi" }
+Fk:loadTranslationTable{
+  ["mini__xuchu"] = "许褚",
+  ["#mini__xuchu"] = "虎痴",
+  ["illustrator:mini__xuchu"] = "巴萨小马",
+}
+
+General:new(extension, "mini__guanyu", "shu", 4):addSkills { "wusheng", "mini__qinglong" }
+Fk:loadTranslationTable{
+  ["mini__guanyu"] = "关羽",
+  ["#mini__guanyu"] = "美髯公",
+}
+
+General:new(extension, "mini__zhangfei", "shu", 4):addSkills { "paoxiao", "mini__shemao" }
+Fk:loadTranslationTable{
+  ["mini__zhangfei"] = "张飞",
+  ["#mini__zhangfei"] = "万夫不当",
+}
+
+General:new(extension, "mini__zhaoyun", "shu", 4):addSkills { "longdan", "mini__qinggang" }
+Fk:loadTranslationTable{
+  ["mini__zhaoyun"] = "赵云",
+  ["#mini__zhaoyun"] = "少年将军",
+}
+
+General:new(extension, "mini__machao", "shu", 4):addSkills { "mini__tieqi", "mashu" }
+Fk:loadTranslationTable{
+  ["mini__machao"] = "马超",
+  ["#mini__machao"] = "一骑当千",
 }
 
 General:new(extension, "mini__lvmeng", "wu", 4):addSkill("mini__keji")
 Fk:loadTranslationTable{
   ["mini__lvmeng"] = "吕蒙",
+  ["#mini__lvmeng"] = "白衣渡江",
 }
 
 General:new(extension, "mini__sunshangxiang", "wu", 3, 3, General.Female):addSkills {
@@ -25,46 +58,55 @@ General:new(extension, "mini__sunshangxiang", "wu", 3, 3, General.Female):addSki
 }
 Fk:loadTranslationTable{
   ["mini__sunshangxiang"] = "孙尚香",
+  ["#mini__sunshangxiang"] = "弓腰姬",
 }
 
 General:new(extension, "mini__xiahouyuan", "wei", 4):addSkill("mini__shensu")
 Fk:loadTranslationTable{
   ["mini__xiahouyuan"] = "夏侯渊",
+  ["#mini__xiahouyuan"] = "疾行的猎豹",
 }
 
 General:new(extension, "mini__caoren", "wei", 4):addSkill("mini__jushou")
 Fk:loadTranslationTable{
   ["mini__caoren"] = "曹仁",
+  ["#mini__caoren"] = "大将军",
+}
+
+General:new(extension, "mini__huangzhong", "shu", 4):addSkill("mini__liegong")
+Fk:loadTranslationTable{
+  ["mini__huangzhong"] = "黄忠",
+  ["#mini__huangzhong"] = "老当益壮",
 }
 
 General:new(extension, "mini__weiyan", "shu", 4):addSkill("mini__kuanggu")
 Fk:loadTranslationTable{
   ["mini__weiyan"] = "魏延",
+  ["#mini__weiyan"] = "嗜血的独狼",
 }
 
 General:new(extension, "mini__pangtong", "shu", 3):addSkills { "mini__lianhuan", "mini__niepan" }
 Fk:loadTranslationTable{
   ["mini__pangtong"] = "庞统",
-}
-
-General:new(extension, "mini__pangde", "qun", 4):addSkills { "mashu", "mini__jianchu" }
-Fk:loadTranslationTable{
-  ["mini__pangde"] = "庞德",
+  ["#mini__pangtong"] = "凤雏",
 }
 
 General:new(extension, "mini__menghuo", "shu", 4):addSkills { "mini__huoshou", "mini__zaiqi" }
 Fk:loadTranslationTable{
   ["mini__menghuo"] = "孟获",
+  ["#mini__menghuo"] = "南蛮王",
 }
 
 General:new(extension, "mini__jiaxu", "qun", 3):addSkills { "mini__wansha", "mini__luanwu", "weimu" }
 Fk:loadTranslationTable{
   ["mini__jiaxu"] = "贾诩",
+  ["#mini__jiaxu"] = "冷酷的毒士",
 }
 
 General:new(extension, "mini__caiwenji", "qun", 3, 3, General.Female):addSkills { "mini__beige", "mini__duanchang" }
 Fk:loadTranslationTable{
   ["mini__caiwenji"] = "蔡文姬",
+  ["#mini__caiwenji"] = "异乡的孤女",
   ["illustrator:mini__caiwenji"] = "砚对溪华",
 }
 
@@ -76,6 +118,12 @@ Fk:loadTranslationTable{
 General:new(extension, "mini_ex__zhaoyun", "shu", 4):addSkills { "mini_ex__longdan", "mini_ex__yajiao" }
 Fk:loadTranslationTable{
   ["mini_ex__zhaoyun"] = "界赵云",
+  ["#mini_ex__zhaoyun"] = "虎威将军",
+}
+
+General:new(extension, "mini_ex__pangde", "qun", 4):addSkills { "mashu", "mini_ex__mengjin" }
+Fk:loadTranslationTable{
+  ["mini_ex__pangde"] = "界庞德",
 }
 
 General:new(extension, "mini__xushu", "shu", 3):addSkills { "mini__wuyan", "jujian" }
